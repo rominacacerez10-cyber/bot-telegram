@@ -11,7 +11,7 @@ def index():
 
 # 2. Configuración del Bot (Usa tu último Token verificado)
 #
-TOKEN = "8106789282:AAHQ8vaNTeS0p8DVb4L1khGbahTDPy0nNgU"
+TOKEN = "8106789282:AAGBmKZgELy8KSUT7K6d7mbFspFpxUzhG-M"
 bot = telebot.TeleBot(TOKEN)
 
 # 3. Comandos del Bot

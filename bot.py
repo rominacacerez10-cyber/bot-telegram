@@ -11,7 +11,7 @@ def index():
     return "Bot is running!"
 
 # 2. Configuración de tu Bot (PON TU NUEVO TOKEN AQUÍ)
-TOKEN = "8106789282:ASHQ8vaNTeS0p8DVb4L1khGbahTDPy0nNgU"
+TOKEN = "8106789282:AAHQ8vaNTeS0p8DVb4L1khGbahTDPy0nNgU"
 bot = telebot.TeleBot(TOKEN)
 
 # 3. Tus comandos (Ejemplo del comando /chk)

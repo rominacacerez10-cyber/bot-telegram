@@ -1,72 +1,50 @@
+import telebot
 import requests
-import time
 import urllib.parse
-import urllib3
+from flask import Flask
+from threading import Thread
 import os
-import threading
-from http.server import HTTPServer, BaseHTTPRequestHandler
 
-# Desactivar advertencias de certificados
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
+# Configuración
 TOKEN = "8106789282:AAF09T8dWH6fy0swDLpyXtbpwY3zJqQBDJw"
-URL = f"https://api.telegram.org/bot{TOKEN}/"
+bot = telebot.TeleBot(TOKEN)
+app = Flask(__name__)
 
-# --- LÓGICA DEL BOT ---
+@app.route('/')
+def home():
+    return "Bot esta vivo"
 
-def enviar_mensaje(chat_id, texto):
-    try:
-        payload = {'chat_id': chat_id, 'text': texto, 'parse_mode': 'HTML'}
-        requests.get(URL + "sendMessage", params=payload, timeout=10)
-    except:
-        pass
+def run_flask():
+    app.run(host='0.0.0.0', port=10000)
 
 def ejecutar_checker(cards):
     try:
-        cards_encoded = urllib.parse.quote(cards)
+        cards_clean = cards.strip()
+        cards_encoded = urllib.parse.quote(cards_clean)
         api_url = f"https://arturo.alwaysdata.net/MultiHilos/peticion2.php?cards={cards_encoded}"
-        # Render permite la conexión directa sin Error 403
-        response = requests.get(api_url, verify=False, timeout=25)
-        return response.text
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        # Timeout de 30 segundos para evitar que se quede "pegado"
+        response = requests.get(api_url, headers=headers, verify=False, timeout=30)
+        return response.text if response.text.strip() else "❌ API sin respuesta."
     except Exception as e:
-        return f"<b>⚠️ Error:</b>\n<code>{str(e)}</code>"
+        return f"❌ Error: {str(e)}"
 
-def iniciar_bot():
-    print("🚀 Bot CJkiller iniciado en Render...")
-    last_update_id = 0
-    while True:
-        try:
-            res = requests.get(URL + f"getUpdates?offset={last_update_id + 1}", timeout=10).json()
-            if res.get("ok") and res.get("result"):
-                for update in res["result"]:
-                    last_update_id = update["update_id"]
-                    if "message" in update and "text" in update["message"]:
-                        chat_id = update["message"]["chat"]["id"]
-                        msg = update["message"]["text"]
-                        if msg.startswith(("/chk", ".chk")):
-                            cards = msg.replace("/chk ", "").replace(".chk ", "").strip()
-                            enviar_mensaje(chat_id, "<b>⌛ Procesando tarjetas...</b>")
-                            resultado = ejecutar_checker(cards)
-                            enviar_mensaje(chat_id, resultado)
-            time.sleep(1)
-        except:
-            time.sleep(5)
-
-# --- SERVIDOR WEB PARA EL PLAN GRATUITO DE RENDER ---
-
-class SimpleHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"Bot esta vivo")
-
-def ejecutar_servidor():
-    port = int(os.environ.get("PORT", 10000))
-    server = HTTPServer(('0.0.0.0', port), SimpleHandler)
-    server.serve_forever()
+@bot.message_handler(commands=['chk'])
+def chk_handler(message):
+    try:
+        input_text = message.text.split(maxsplit=1)
+        if len(input_text) < 2:
+            bot.reply_to(message, "📝 Formato: /chk tarjeta")
+            return
+        
+        sent_message = bot.reply_to(message, "⌛ Procesando tarjetas...")
+        resultado = ejecutar_checker(input_text[1])
+        bot.edit_message_text(resultado, message.chat.id, sent_message.message_id, parse_mode='HTML')
+    except Exception as e:
+        print(f"Error en handler: {e}")
 
 if __name__ == "__main__":
-    # Iniciamos el bot en un hilo separado
-    threading.Thread(target=iniciar_bot, daemon=True).start()
-    # Iniciamos el servidor web que pide Render para el plan Free
-    ejecutar_servidor()
+    # Iniciar servidor web para Render
+    Thread(target=run_flask).start()
+    print("🚀 Bot CJkiller iniciado en Render...")
+    bot.infinity_polling()

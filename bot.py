@@ -2,27 +2,25 @@ import telebot
 from flask import Flask
 import os
 
-# 1. Configuración básica
+# 1. Configuración de Flask
 app = Flask(__name__)
-TOKEN = "8106789282:AAHQ8vaNTeS0p8DVb4L1khGbahTDPy0nNgU" # Tu token verificado
-bot = telebot.TeleBot(TOKEN)
 
 @app.route('/')
 def index():
-    return "Servidor activo"
+    return "Servidor CJkiller Activo"
 
-# 2. Comando de prueba
-@bot.message_handler(commands=['chk'])
-def check(message):
-    bot.reply_to(message, "✅ ¡Bot funcionando correctamente!")
+# 2. Configuración del Bot (Usa tu último Token verificado)
+#
+TOKEN = "8106789282:AAHQ8vaNTeS0p8DVb4L1khGbahTDPy0nNgU"
+bot = telebot.TeleBot(TOKEN)
 
-# 3. Función de arranque simplificada (SIN THREADING para evitar duplicidad)
+# 3. Comandos del Bot
+@bot.message_handler(commands=['start', 'chk'])
+def send_welcome(message):
+    bot.reply_to(message, "✅ ¡Bot CJkiller funcionando correctamente en Render!")
+
+# 4. Bloque de ejecución para Render
 if __name__ == "__main__":
-    import threading
-    # Usamos un nombre de hilo específico para evitar choques
-    t = threading.Thread(target=lambda: bot.infinity_polling(timeout=20, long_polling_timeout=10))
-    t.daemon = True
-    t.start()
-    
-    # Render usa el puerto 10000 por defecto
+    # Importante: No usamos threading aquí para evitar el error 409 Conflict
+    # El puerto 10000 es el estándar de Render
     app.run(host="0.0.0.0", port=10000)

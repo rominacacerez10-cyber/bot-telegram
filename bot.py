@@ -47,4 +47,6 @@ if __name__ == "__main__":
     # Iniciar servidor web para Render
     Thread(target=run_flask).start()
     print("🚀 Bot CJkiller iniciado en Render...")
-    bot.infinity_polling()
+    bot.infinity_polling() 
+
+# Cambio final

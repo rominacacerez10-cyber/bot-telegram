@@ -1,47 +1,39 @@
 import telebot
 import os
-import time
-import threading
-import requests
-from flask import Flask
+from flask import Flask, request
 
 # --- CONFIGURACIÓN ---
 TOKEN = "8106789282:AAGBmKZgELy8KSUT7K6d7mbFspFpxUzhG-M"
-OWNER_ID = 7012561892
+# Asegúrate de que esta URL coincida exactamente con la de tu Dashboard de Render
+URL_PROYECTO = "https://cjkiller-bot.onrender.com" 
 
-# Desactivamos el threading interno para evitar choques
-bot = telebot.TeleBot(TOKEN, threaded=False)
+bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
-@bot.message_handler(commands=['start', 'shk'])
-def handle_commands(message):
-    if message.text.startswith('/start'):
-        bot.reply_to(message, "✅ **CJkiller v20.5 ESTABLE**\nConexión única establecida.")
-    elif message.text.startswith('/shk'):
-        if message.from_user.id == OWNER_ID:
-            bot.reply_to(message, "🔍 Consultando... (Conexión limpia)")
+# --- COMANDOS ---
+@bot.message_handler(commands=['start'])
+def start(message):
+    bot.reply_to(message, "✅ **SISTEMA ESTABILIZADO**\nCJkiller v20.5 ahora funciona mediante Webhook para evitar conflictos.", parse_mode="Markdown")
 
-@app.route('/')
-def home():
-    return "Bot status: OK"
+@bot.message_handler(commands=['shk'])
+def shk(message):
+    bot.reply_to(message, "🔍 Procesando SHK en modo estable...")
 
-def run_bot():
-    """Bucle de conexión con limpieza de Webhook forzada"""
-    while True:
-        try:
-            # LIMPIEZA TOTAL: Matamos cualquier rastro de conexiones previas
-            print(">>> Limpiando servidores de Telegram...")
-            requests.get(f"https://api.telegram.org/bot{TOKEN}/deleteWebhook?drop_pending_updates=True")
-            time.sleep(5) 
-            
-            print(">>> Iniciando polling exclusivo...")
-            bot.polling(none_stop=True, interval=1, timeout=20)
-        except Exception as e:
-            # Si hay conflicto 409, esperamos 15 segundos para que Render mate el proceso viejo
-            print(f"Conflicto detectado: {e}. Esperando cierre de proceso anterior...")
-            time.sleep(15)
+# --- RUTA DEL WEBHOOK ---
+@app.route('/' + TOKEN, methods=['POST'])
+def getMessage():
+    json_string = request.get_data().decode('utf-8')
+    update = telebot.types.Update.de_json(json_string)
+    bot.process_new_updates([update])
+    return "!", 200
+
+@app.route("/")
+def webhook_setup():
+    bot.remove_webhook()
+    # Esto le dice a Telegram a dónde enviar los mensajes
+    bot.set_webhook(url=URL_PROYECTO + '/' + TOKEN)
+    return "Configuración Webhook: EXITOSA", 200
 
 if __name__ == "__main__":
-    threading.Thread(target=run_bot, daemon=True).start()
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)

@@ -1,80 +1,71 @@
+from datetime import datetime, timedelta
 import telebot
-import requests
-import time
-import threading
 import os
-from flask import Flask
+from pymongo import MongoClient
 
 # --- CONFIGURACIÓN ---
 TOKEN = "8106789282:AAGBmKZgELy8KSUT7K6d7mbFspFpxUzhG-M"
-ADMIN_ID = 7012561892 
+MONGO_URI = os.environ.get("MONGO_URI") 
+OWNER_ID = 7012561892
 
-# Evita el error 409 finalizando sesiones previas
+client = MongoClient(MONGO_URI)
+db = client['cjkiller_database']
+users_col = db['vip_users']
+
 bot = telebot.TeleBot(TOKEN, threaded=False)
-app = Flask(__name__)
 
-# --- ESTRUCTURA DE GATES (Esperando tus llaves) ---
-gates_config = {
-    "chk1": {"name": "Stripe Auth", "status": "Offline 🔴"},
-    "chk2": {"name": "Shopify Premium", "status": "Offline 🔴"},
-    "chk3": {"name": "Square Cloud", "status": "Offline 🔴"}
-}
+# --- SISTEMA DE TIEMPO ---
+def add_vip_with_time(user_id, days):
+    expiry_date = datetime.now() + timedelta(days=days)
+    # Guardamos el ID y la fecha de vencimiento
+    users_col.update_one(
+        {"user_id": user_id},
+        {"$set": {"expiry": expiry_date.isoformat()}},
+        upsert=True
+    )
+    return expiry_date.strftime('%Y-%m-%d')
 
+def get_remaining_days(user_id):
+    user = users_col.find_one({"user_id": user_id})
+    if not user or "expiry" not in user: return 0
+    
+    expiry = datetime.fromisoformat(user["expiry"])
+    remaining = (expiry - datetime.now()).days
+    return max(0, remaining)
+
+# --- COMANDOS DE ADMIN ---
+@bot.message_handler(commands=['add'])
+def add_vip(message):
+    if message.from_user.id != OWNER_ID: return
+    try:
+        # Uso: /add ID DIAS (Ej: /add 12345 30)
+        args = message.text.split()
+        new_id = int(args[1])
+        days = int(args[2]) if len(args) > 2 else 30
+        
+        date_str = add_vip_with_time(new_id, days)
+        bot.reply_to(message, f"✅ **USUARIO ACTIVADO**\n🆔 ID: `{new_id}`\n📅 Vence: `{date_str}`\n⏳ Días: `{days}`")
+    except:
+        bot.reply_to(message, "❌ **Uso:** `/add ID DIAS`")
+
+# --- MENÚ CON INFO DINÁMICA ---
 @bot.message_handler(commands=['start'])
 def start(message):
-    if message.from_user.id != ADMIN_ID: return
+    user_id = message.from_user.id
+    days_left = get_remaining_days(user_id)
+    
+    if user_id != OWNER_ID and days_left <= 0:
+        bot.reply_to(message, "🚫 **TU MEMBRESÍA HA EXPIRADO.**\nContacta al dueño para renovar.")
+        return
+
+    status = "INFINITY ♾️" if user_id == OWNER_ID else f"{days_left} Días"
+    
     menu = (
-        "💠 **CJkiller MULTI-GATE v10.1** 💠\n"
-        "━━━━━━━━━━━━━━━━━━━━\n"
-        "🛰️ **COMANDOS DE ÉLITE:**\n"
-        "1️⃣ `/chk1` - Stripe Gateway\n"
-        "2️⃣ `/chk2` - Shopify Gateway\n"
-        "3️⃣ `/chk3` - Square Gateway\n"
-        "━━━━━━━━━━━━━━━━━━━━\n"
-        "📊 **ESTADO:** `Esperando Keys del Jefe`"
+        f"🛰️ **CJkiller v18.0 - VIP ACCESS**\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n"
+        f"👤 **OPERADOR:** `{message.from_user.first_name}`\n"
+        f"⏳ **EXPIRACIÓN:** `{status}`\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n"
+        f"Utiliza `/gen`, `/chk1` o `/bin` para comenzar."
     )
-    bot.reply_to(message, menu, parse_mode="Markdown")
-
-@bot.message_handler(commands=['chk1', 'chk2', 'chk3'])
-def process_multi_gate(message):
-    if message.from_user.id != ADMIN_ID: return
-    cmd = message.text.split()[0][1:]
-    
-    try:
-        data = message.text.split(maxsplit=1)[1]
-        sent = bot.reply_to(message, f"📡 **INYECTANDO:** `{gates_config[cmd]['name']}`\n⚙️ **PROCESANDO...**", parse_mode="Markdown")
-        
-        # Simulación ultra-moderna hasta que lleguen las keys
-        time.sleep(2)
-        
-        final_ui = (
-            f"⚡ **CJKILLER GLOBAL CHECKER**\n"
-            f"━━━━━━━━━━━━━━━━━━━━\n"
-            f"💳 **DATA:** `{data}`\n"
-            f"🛡️ **GATEWAY:** `{gates_config[cmd]['name']}`\n"
-            f"📝 **RESULT:** `AWAITING KEYS 🔑`\n"
-            f"━━━━━━━━━━━━━━━━━━━━\n"
-            f"🟢 **ENGINE:** `BLACK-OPS v10.1`"
-        )
-        bot.edit_message_text(final_ui, sent.chat.id, sent.message_id, parse_mode="Markdown")
-    except:
-        bot.reply_to(message, f"❌ **Uso:** `/{cmd} cc|mm|aa|cvv`")
-
-# --- MANTENIMIENTO ---
-@app.route('/')
-def home(): return "Multi-Gate Active"
-
-def keep_alive():
-    while True:
-        try: requests.get("https://cjkiller-bot.onrender.com")
-        except: pass
-        time.sleep(600)
-
-if __name__ == "__main__":
-    # Iniciar Keep-alive
-    threading.Thread(target=keep_alive, daemon=True).start()
-    # Iniciar Bot con reinicio automático para evitar error 409
-    threading.Thread(target=lambda: bot.infinity_polling(timeout=10, long_polling_timeout=5)).start()
-    
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    bot.send_message(message.chat.id, menu, parse_mode="Markdown")

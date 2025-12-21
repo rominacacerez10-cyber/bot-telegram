@@ -20,7 +20,6 @@ def run_flask():
 
 # --- 2. CONFIGURACIÓN Y BASE DE DATOS ---
 TOKEN = "8106789282:AAFI6CEgWuL-nq5jpSf3vSD8pzIlwLvoBLQ"
-# Tu ID de Administrador configurado
 ADMIN_ID = 7012561892 
 MONGO_URI = "mongodb+srv://admin:S47qBJK9Sjghm11t@cluster0.gprhwkr.mongodb.net/?appName=Cluster0"
 
@@ -29,7 +28,7 @@ client = MongoClient(MONGO_URI)
 db = client['cjkiller_db']
 users_col = db['users']
 
-# --- 3. LÓGICA DE ENCRIPTACIÓN ADYEN ---
+# --- 3. LÓGICA DE APOYO ---
 def encrypt_adyen(card, month, year, cvv):
     try:
         gen_time = datetime.utcnow().isoformat() + "Z" 
@@ -38,7 +37,19 @@ def encrypt_adyen(card, month, year, cvv):
         return {"success": True, "encrypted": f"adyenjs_0_1_25${encoded}"}
     except: return {"success": False}
 
-# --- 4. COMANDOS DE USUARIO Y REFERIDOS ---
+def get_fake_data():
+    names = ["John", "Robert", "Michael", "William", "David", "Richard", "Joseph", "Thomas"]
+    last = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis"]
+    cities = ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia"]
+    return {
+        "name": f"{random.choice(names)} {random.choice(last)}",
+        "email": f"{random.choice(names).lower()}{random.randint(100,999)}@gmail.com",
+        "street": f"{random.randint(100, 999)} {random.choice(['Main St', 'Oak Ave', 'Park Blvd', 'Cedar Ln'])}",
+        "city": random.choice(cities),
+        "zip": random.randint(10001, 99999)
+    }
+
+# --- 4. COMANDOS DE USUARIO ---
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
@@ -47,65 +58,62 @@ def send_welcome(message):
     args = message.text.split()
     
     user = users_col.find_one({"user_id": user_id})
-    
     if not user:
-        new_user = {
-            "user_id": user_id,
-            "username": username,
-            "credits": 10,
-            "role": "user",
-            "referred_by": None,
-            "referrals_count": 0
-        }
-        
-        # Lógica de Referidos: /start [id_referidor]
+        new_user = {"user_id": user_id, "username": username, "credits": 10, "role": "user", "referrals_count": 0}
         if len(args) > 1 and args[1].isdigit():
-            referrer_id = int(args[1])
-            if referrer_id != user_id:
-                new_user["referred_by"] = referrer_id
-                users_col.update_one({"user_id": referrer_id}, {"$inc": {"credits": 5, "referrals_count": 1}})
-                try:
-                    bot.send_message(referrer_id, f"🎊 **¡Nuevo Referido!** @{username} se unió con tu link. +5 Créditos.")
+            ref_id = int(args[1])
+            if ref_id != user_id:
+                users_col.update_one({"user_id": ref_id}, {"$inc": {"credits": 5, "referrals_count": 1}})
+                try: bot.send_message(ref_id, f"🎊 **¡Referido!** @{username} se unió. +5 créditos.")
                 except: pass
-
         users_col.insert_one(new_user)
         user = new_user
 
-    texto = (
+    bot.reply_to(message, (
         "| Hardcore:() |\n"
         "━━━━━━━━━━━━━━\n"
-        "🔥 **CJKILLER ULTIMATE**\n"
-        "━━━━━━━━━━━━━━\n"
-        f"👤 **Usuario:** @{username}\n"
+        f"🔥 **CJKILLER ULTIMATE**\n"
+        f"👤 **User:** @{username}\n"
         f"💰 **Créditos:** {user.get('credits', 0)}\n"
-        f"👑 **Rango:** {'ADMIN' if user_id == ADMIN_ID else 'FREE'}\n"
         "━━━━━━━━━━━━━━\n"
         "🚀 **MENU:**\n"
-        "• `/adyen` CC|MES|ANO|CVV\n"
-        "• `/fake` - Generar Datos\n"
-        "• `/ref` - Link de Referido\n"
-        "• `/me` - Mi Perfil\n"
+        "• `/adyen` CC|MM|YY|CVV\n"
+        "• `/fake` - Datos Falsos\n"
+        "• `/me` - Ver Perfil\n"
+        "• `/ref` - Ganar Créditos\n"
         "━━━━━━━━━━━━━━"
-    )
-    bot.reply_to(message, texto, parse_mode="Markdown")
+    ), parse_mode="Markdown")
 
-@bot.message_handler(commands=['ref'])
-def cmd_ref(message):
-    user_id = message.from_user.id
-    ref_link = f"https://t.me/{(bot.get_me()).username}?start={user_id}"
-    user = users_col.find_one({"user_id": user_id})
-    
-    response = (
+@bot.message_handler(commands=['me'])
+def cmd_me(message):
+    user = users_col.find_one({"user_id": message.from_user.id})
+    if not user: return
+    bot.reply_to(message, (
         "| Hardcore:() |\n"
         "━━━━━━━━━━━━━━\n"
-        "🔗 **REFERIDOS**\n"
+        "👤 **TU PERFIL**\n"
         "━━━━━━━━━━━━━━\n"
-        "Gana **5 créditos** por invitado.\n\n"
-        f"📥 **Link:** `{ref_link}`\n"
-        f"👥 **Total:** {user.get('referrals_count', 0)}\n"
+        f"🆔 **ID:** `{user['user_id']}`\n"
+        f"💰 **Créditos:** {user['credits']}\n"
+        f"👥 **Referidos:** {user['referrals_count']}\n"
+        f"👑 **Rango:** {'OWNER' if user['user_id'] == ADMIN_ID else 'USER'}\n"
         "━━━━━━━━━━━━━━"
-    )
-    bot.reply_to(message, response, parse_mode="Markdown")
+    ), parse_mode="Markdown")
+
+@bot.message_handler(commands=['fake'])
+def cmd_fake(message):
+    f = get_fake_data()
+    bot.reply_to(message, (
+        "| Hardcore:() |\n"
+        "━━━━━━━━━━━━━━\n"
+        "🌐 **GENERATED DATA**\n"
+        "━━━━━━━━━━━━━━\n"
+        f"👤 **Nombre:** `{f['name']}`\n"
+        f"📧 **Email:** `{f['email']}`\n"
+        f"🏠 **Calle:** `{f['street']}`\n"
+        f"📍 **Ciudad/ZIP:** `{f['city']} / {f['zip']}`\n"
+        "━━━━━━━━━━━━━━"
+    ), parse_mode="Markdown")
 
 @bot.message_handler(commands=['adyen'])
 def cmd_adyen(message):
@@ -113,8 +121,7 @@ def cmd_adyen(message):
         data = message.text.split()[1]
         p = data.split('|')
         res = encrypt_adyen(p[0], p[1], p[2], p[3])
-        # Estética recuperada de tus capturas
-        response = (
+        bot.reply_to(message, (
             "| Hardcore:() |\n"
             "━━━━━━━━━━━━━━\n"
             f"🔹 **CC:** `{data}`\n"
@@ -122,33 +129,36 @@ def cmd_adyen(message):
             "💎 **HASH:**\n"
             f"`{res['encrypted']}`\n"
             "━━━━━━━━━━━━━━"
-        )
-        bot.reply_to(message, response, parse_mode="Markdown")
-    except:
-        bot.reply_to(message, "❌ Formato: `/adyen CC|MES|ANO|CVV`")
+        ), parse_mode="Markdown")
+    except: bot.reply_to(message, "❌ Use: `/adyen CC|MM|YY|CVV`")
 
-# --- 5. COMANDOS EXCLUSIVOS DEL DUEÑO (ID: 7012561892) ---
+@bot.message_handler(commands=['ref'])
+def cmd_ref(message):
+    user_id = message.from_user.id
+    ref_link = f"https://t.me/{(bot.get_me()).username}?start={user_id}"
+    bot.reply_to(message, (
+        "| Hardcore:() |\n"
+        "━━━━━━━━━━━━━━\n"
+        "🔗 **REFERIDOS**\n"
+        "━━━━━━━━━━━━━━\n"
+        f"📥 **Link:** `{ref_link}`\n"
+        "🎁 Gana **5 créditos** por cada invitado.\n"
+        "━━━━━━━━━━━━━━"
+    ), parse_mode="Markdown")
 
+# --- 5. ADMIN ---
 @bot.message_handler(commands=['addcredits'])
 def add_credits(message):
-    if message.from_user.id != ADMIN_ID:
-        return bot.reply_to(message, "⚠️ Solo el Owner puede usar esto.")
-    
+    if message.from_user.id != ADMIN_ID: return
     try:
-        args = message.text.split()
-        target_id = int(args[1])
-        amount = int(args[2])
-        
-        users_col.update_one({"user_id": target_id}, {"$inc": {"credits": amount}})
-        bot.reply_to(message, f"✅ Has enviado {amount} créditos al usuario `{target_id}`.")
-        bot.send_message(target_id, f"💎 **¡CRÉDITOS RECIBIDOS!**\nEl Owner te ha asignado {amount} créditos.")
-    except:
-        bot.reply_to(message, "❌ Uso: `/addcredits [ID] [CANTIDAD]`")
+        _, tid, amt = message.text.split()
+        users_col.update_one({"user_id": int(tid)}, {"$inc": {"credits": int(amt)}})
+        bot.reply_to(message, f"✅ +{amt} créditos a `{tid}`")
+    except: bot.reply_to(message, "❌ `/addcredits [ID] [CANTIDAD]`")
 
-# --- 6. ARRANQUE SEGURO ---
+# --- 6. ARRANQUE ---
 if __name__ == "__main__":
     threading.Thread(target=run_flask, daemon=True).start()
-    time.sleep(10) # Espera técnica para Render
+    time.sleep(5)
     bot.remove_webhook()
-    print(f"🚀 CJKILLER ONLINE - ADMIN: {ADMIN_ID}")
-    bot.polling(none_stop=True, interval=2, timeout=20)
+    bot.polling(none_stop=True, interval=2)

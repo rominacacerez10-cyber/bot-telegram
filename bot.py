@@ -12,50 +12,70 @@ from pymongo import MongoClient
 TOKEN = "8106789282:AAGBmKZgELy8KSUT7K6d7mbFspFpxUzhG-M"
 MONGO_URI = "mongodb+srv://admin:S47qBJK9Sjghm11t@cluster0.gprhwkr.mongodb.net/?appName=Cluster0"
 
-# Inicializamos el bot sin hilos para evitar el error de conflicto 409
+# Usamos Single Thread para evitar el error de conflicto en Render
 bot = telebot.TeleBot(TOKEN, threaded=False)
 client = MongoClient(MONGO_URI)
 db = client['cjkiller_db']
 users_col = db['users']
 
-# --- 2. LÓGICA DE ENCRIPTACIÓN ADYEN ---
-def encrypt_adyen(card, month, year, cvv, adyen_key):
+# --- 2. LÓGICA DE ENCRIPTACIÓN ---
+def encrypt_adyen(card, month, year, cvv):
     try:
         gen_time = datetime.utcnow().isoformat() + "Z" 
         payload = {
-            "number": card,
-            "cvc": cvv,
-            "expiryMonth": month,
-            "expiryYear": year,
+            "number": card, "cvc": cvv,
+            "expiryMonth": month, "expiryYear": year,
             "generationtime": gen_time
         }
         encoded = base64.b64encode(json.dumps(payload).encode()).decode()
         return {"success": True, "encrypted": f"adyenjs_0_1_25${encoded}"}
-    except Exception as e:
-        return {"success": False, "error": str(e)}
+    except:
+        return {"success": False}
 
-# --- 3. MANEJO DE COMANDOS ---
+# --- 3. COMANDOS ---
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    user_id = message.from_user.id
-    user = users_col.find_one({"user_id": user_id})
-    if not user:
-        users_col.insert_one({"user_id": user_id, "credits": 10, "joined_at": datetime.now()})
-    
-    bot.reply_to(message, "🔥 **CJKILLER NET ACTIVADO** 🔥\n\nUsa `/adyen CC|MES|ANO|CVV KEY` o envía un .txt", parse_mode="Markdown")
+    bot.reply_to(message, "✅ **CJKILLER ONLINE**\nUsa `/adyen CC|MES|ANO|CVV KEY`", parse_mode="Markdown")
 
 @bot.message_handler(commands=['adyen'])
 def cmd_adyen(message):
     try:
         parts = message.text.split()
-        if len(parts) < 3:
-            return bot.reply_to(message, "❌ Formato: `/adyen CC|MES|ANO|CVV KEY`")
-        
         datos = parts[1].split('|')
-        res = encrypt_adyen(datos[0], datos[1], datos[2], datos[3], parts[2])
-        if res["success"]:
-            bot.reply_to(message, f"💎 **RESULTADO:**\n`{res['encrypted']}`", parse_mode="Markdown")
+        res = encrypt_adyen(datos[0], datos[1], datos[2], datos[3])
+        bot.reply_to(message, f"💎 **RESULTADO:**\n`{res['encrypted']}`", parse_mode="Markdown")
     except:
-        bot.reply_to(message, "❌ Error al procesar.")
+        bot.reply_to(message, "❌ Error en formato.")
 
-# --- 4. PROCES
+@bot.message_handler(content_types=['document'])
+def handle_docs(message):
+    # Fix: Dos puntos añadidos para evitar SyntaxError
+    if message.document.file_name.endswith('.txt'):
+        msg = bot.reply_to(message, "📩 Envía la **ADYEN_KEY** para procesar:")
+        bot.register_next_step_handler(msg, process_txt, message.document)
+
+def process_txt(message, doc):
+    key = message.text
+    file_info = bot.get_file(doc.file_id)
+    downloaded = bot.download_file(file_info.file_path).decode('utf-8')
+    results = []
+    for line in downloaded.splitlines()[:50]:
+        try:
+            d = line.replace('|',' ').split()
+            res = encrypt_adyen(d[0], d[1], d[2], d[3])
+            results.append(f"{line} -> {res['encrypted']}")
+        except: continue
+    output = io.BytesIO("\n".join(results).encode())
+    output.name = "resultados.txt"
+    bot.send_document(message.chat.id, output, caption="✅ Proceso completado.")
+
+# --- 4. BUCLE DE ARRANQUE SEGURO ---
+if __name__ == "__main__":
+    print("🚀 Intentando arrancar bot...")
+    while True:
+        try:
+            bot.remove_webhook() # Limpia conflictos
+            bot.polling(none_stop=True, interval=1, timeout=20)
+        except Exception as e:
+            print(f"⚠️ Error de conexión: {e}. Reintentando en 5 segundos...")
+            time.sleep(5)

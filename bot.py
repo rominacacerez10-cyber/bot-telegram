@@ -4,22 +4,20 @@ import base64
 import json
 import time
 import threading
+import io
 from flask import Flask
 from datetime import datetime
 
-# --- 1. SERVIDOR WEB (Para mantener el bot vivo en Render) ---
+# --- 1. SERVIDOR ANTICIERRE (Para Render Free) ---
 app = Flask(__name__)
-
 @app.route('/')
-def index():
-    return "CJKiller Bot is Active with New Token"
+def index(): return "CJKiller Hardcore Edition is Online"
 
 def run_flask():
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
 
 # --- 2. CONFIGURACIÓN ---
-# Token actualizado satisfactoriamente
 TOKEN = "8106789282:AAFI6CEgWuL-nq5jpSf3vSD8pzIlwLvoBLQ"
 bot = telebot.TeleBot(TOKEN, threaded=False)
 
@@ -37,38 +35,84 @@ def encrypt_adyen(card, month, year, cvv):
     except:
         return {"success": False}
 
-# --- 4. COMANDOS ---
+# --- 4. COMANDOS CON ESTÉTICA PERSONALIZADA ---
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.reply_to(message, "🔥 **CJKILLER ONLINE**\n\nEl bot se ha reiniciado correctamente con el nuevo Token.\nUsa `/adyen CC|MES|ANO|CVV`", parse_mode="Markdown")
+    texto = (
+        "| Hardcore:() |\n"
+        "━━━━━━━━━━━━━━\n"
+        "🔥 **CJKILLER BOT v2.0**\n"
+        "━━━━━━━━━━━━━━\n"
+        "💎 **Comandos Disponibles:**\n"
+        "• `/adyen CC|MES|ANO|CVV` - Encriptar una CC.\n"
+        "• `/chk CC|MES|ANO|CVV` - Probar tarjeta (Gate).\n"
+        "• **Envía un .txt** - Procesamiento Masivo.\n"
+        "━━━━━━━━━━━━━━\n"
+        "👑 **Owner:** @TuUsuario"
+    )
+    bot.reply_to(message, texto, parse_mode="Markdown")
 
 @bot.message_handler(commands=['adyen'])
 def cmd_adyen(message):
     try:
-        parts = message.text.split()
-        datos = parts[1].split('|')
-        res = encrypt_adyen(datos[0], datos[1], datos[2], datos[3])
-        if res["success"]:
-            bot.reply_to(message, f"💎 **RESULTADO:**\n`{res['encrypted']}`", parse_mode="Markdown")
+        data = message.text.split()[1]
+        p = data.split('|')
+        res = encrypt_adyen(p[0], p[1], p[2], p[3])
+        
+        # Estética de respuesta personalizada
+        response = (
+            "| Hardcore:() |\n"
+            f"━━━━━━━━━━━━━━\n"
+            f"🔹 **CC:** `{data}`\n"
+            "━━━━━━━━━━━━━━\n"
+            "💎 **RESULTADO:**\n"
+            f"`{res['encrypted']}`\n"
+            "━━━━━━━━━━━━━━\n"
+            "✅ **Generado con éxito.**"
+        )
+        bot.reply_to(message, response, parse_mode="Markdown")
     except:
-        bot.reply_to(message, "❌ Formato: `/adyen CC|MES|ANO|CVV`")
+        bot.reply_to(message, "❌ **Error:** Formato incorrecto. Usa `/adyen CC|MES|ANO|CVV`")
 
-# --- 5. ARRANQUE SEGURO ---
+# --- 5. PROCESAMIENTO MASIVO (.TXT) ---
+@bot.message_handler(content_types=['document'])
+def handle_docs(message):
+    if message.document.file_name.endswith('.txt'):
+        bot.reply_to(message, "⏳ **Hardcore Processing...** Espere un momento.")
+        
+        file_info = bot.get_file(message.document.file_id)
+        downloaded = bot.download_file(file_info.file_path).decode('utf-8')
+        
+        results = []
+        for line in downloaded.splitlines()[:100]: # Límite aumentado a 100
+            try:
+                d = line.replace('|', ' ').split()
+                if len(d) >= 4:
+                    res = encrypt_adyen(d[0], d[1], d[2], d[3])
+                    if res["success"]:
+                        results.append(f"{line} -> {res['encrypted']}")
+            except: continue
+        
+        output = io.BytesIO("\n".join(results).encode())
+        output.name = "hashes_hardcore.txt"
+        bot.send_document(
+            message.chat.id, 
+            output, 
+            caption=f"| Hardcore:() |\n━━━━━━━━━━━━━━\n✅ **Procesadas:** {len(results)}\n━━━━━━━━━━━━━━"
+        )
+
+# --- 6. ARRANQUE SEGURO ---
 if __name__ == "__main__":
-    # Iniciar servidor web en segundo plano
     threading.Thread(target=run_flask, daemon=True).start()
     
-    print("⏳ Esperando 10 segundos para estabilizar la nueva clave...")
+    # Pausa de seguridad para que Render limpie el proceso anterior
     time.sleep(10)
-    
-    # Limpiamos cualquier rastro previo en Telegram
     bot.remove_webhook()
     
-    print("🚀 Bot iniciado con éxito...")
+    print("🚀 CJKiller Hardcore Edition Iniciado...")
     while True:
         try:
-            # Intervalo de 3 segundos para evitar bloqueos por saturación
-            bot.polling(none_stop=True, interval=3, timeout=20)
+            bot.polling(none_stop=True, interval=2, timeout=20)
         except Exception as e:
             print(f"⚠️ Reintentando... {e}")
             time.sleep(5)

@@ -25,11 +25,11 @@ users_col = db['users']
 # --- 3. LÓGICA DE ENCRIPTACIÓN ADYEN (Traducida de index.js) ---
 def encrypt_adyen(card, month, year, cvv, adyen_key):
     try:
-        # Generación de tiempo extraída de index.js
+        # Generación de tiempo según index.js
         gen_time = datetime.utcnow().isoformat() + "Z" 
         
-        # Payload estructurado para el bypass
-        payload = {
+        # Estructura de datos para el bypass
+        card_data = {
             "number": card,
             "cvc": cvv,
             "expiryMonth": month,
@@ -37,8 +37,8 @@ def encrypt_adyen(card, month, year, cvv, adyen_key):
             "generationtime": gen_time
         }
         
-        # Codificación base64 simulando el proceso de node-adyen-encrypt
-        encoded_payload = base64.b64encode(json.dumps(payload).encode()).decode()
+        # Simulación del proceso de encriptación node-adyen-encrypt
+        encoded_payload = base64.b64encode(json.dumps(card_data).encode()).decode()
         
         return {
             "success": True, 
@@ -55,6 +55,7 @@ def send_welcome(message):
     user_id = message.from_user.id
     username = message.from_user.username or "Sin User"
     
+    # Registro en base de datos
     user = users_col.find_one({"user_id": user_id})
     if not user:
         users_col.insert_one({
@@ -84,7 +85,7 @@ def cmd_adyen(message):
         return bot.reply_to(message, "📝 **Uso:** `/adyen CC|MES|ANO|CVV ADYEN_KEY`", parse_mode="Markdown")
     
     lista, key = input_text[1], input_text[2]
-    # Limpieza de datos (Lógica de adyen.php)
+    # Limpieza de datos similar a adyen.php
     p = lista.replace('|', ' ').split()
     if len(p) >= 4:
         res = encrypt_adyen(p[0], p[1], p[2], p[3], key)
@@ -95,7 +96,7 @@ def cmd_adyen(message):
 
 @bot.message_handler(content_types=['document'])
 def handle_docs(message):
-    # Corrección del SyntaxError detectado en logs de Render
+    # Fix SyntaxError: faltaban los ':' en la línea 99
     if message.document.file_name.endswith('.txt'):
         msg = bot.reply_to(message, "📩 **Archivo recibido.** Envía la **ADYEN_KEY** para procesarlo:")
         bot.register_next_step_handler(msg, process_txt, message.document)
@@ -106,7 +107,7 @@ def process_txt(message, doc):
     downloaded = bot.download_file(file_info.file_path).decode('utf-8')
     
     results = []
-    # Procesamos línea por línea como adyen.php
+    # Procesamiento línea por línea como en adyen.php
     for line in downloaded.splitlines()[:100]: 
         p = line.replace('|', ' ').split()
         if len(p) >= 4:
@@ -118,11 +119,9 @@ def process_txt(message, doc):
     output.name = "cjkiller_results.txt"
     bot.send_document(message.chat.id, output, caption=f"✅ {len(results)} tarjetas procesadas.")
 
-# --- 6. LANZAMIENTO (Solución Error Conflict 409) ---
+# --- 6. LANZAMIENTO (Fix Error Conflict 409) ---
 if __name__ == "__main__":
-    # Eliminar webhook para resolver el error "can't use getUpdates method while webhook is active"
-    print("🚀 Limpiando Webhooks antiguos...")
+    # Solución al error "webhook is active" visto en tus logs de Render
     bot.remove_webhook() 
-    
     print("🚀 CJkiller v5.0 is LIVE...")
     bot.infinity_polling()

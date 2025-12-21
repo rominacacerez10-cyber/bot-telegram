@@ -8,15 +8,15 @@ from flask import Flask
 from datetime import datetime
 from pymongo import MongoClient
 
-# --- 1. WEB SERVER (Mantiene el bot vivo en Render) ---
+# --- 1. SERVIDOR WEB (Obligatorio para Render) ---
 app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return "CJkiller Bot is Online"
+    return "CJkiller Bot is Live"
 
 def run_flask():
-    # Render usa el puerto 10000 por defecto
+    # Render asigna el puerto automáticamente
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
 
@@ -24,7 +24,6 @@ def run_flask():
 TOKEN = "8106789282:AAGBmKZgELy8KSUT7K6d7mbFspFpxUzhG-M"
 MONGO_URI = "mongodb+srv://admin:S47qBJK9Sjghm11t@cluster0.gprhwkr.mongodb.net/?appName=Cluster0"
 
-# Importante: threaded=False para evitar múltiples hilos peleando por el Token
 bot = telebot.TeleBot(TOKEN, threaded=False)
 
 # --- 3. LÓGICA DE ENCRIPTACIÓN ---
@@ -56,21 +55,20 @@ def cmd_adyen(message):
     except:
         bot.reply_to(message, "❌ Formato: `/adyen CC|MES|ANO|CVV`")
 
-# --- 5. ARRANQUE CON LIMPIEZA AGRESIVA ---
+# --- 5. ARRANQUE SEGURO ---
 if __name__ == "__main__":
-    # Iniciar Flask en segundo plano
+    # Iniciar Flask para evitar que Render mate el proceso
     threading.Thread(target=run_flask, daemon=True).start()
     
-    print("🚀 Limpiando sesiones muertas en Telegram...")
-    # El secreto para quitar el error 409 es borrar el Webhook Y los mensajes pendientes
-    bot.remove_webhook(drop_pending_updates=True)
-    time.sleep(2) # Pausa de seguridad
+    print("🚀 Limpiando sesión...")
+    # Corregido: Se eliminó el argumento 'drop_pending_updates' que causaba el fallo
+    bot.remove_webhook()
+    time.sleep(2)
     
-    print("🚀 Iniciando Polling...")
+    print("🚀 Polling activado...")
     while True:
         try:
             bot.polling(none_stop=True, interval=3, timeout=20)
         except Exception as e:
-            print(f"⚠️ Error detectado: {e}")
-            # Si hay conflicto, esperamos más tiempo para que la otra sesión expire
-            time.sleep(10)
+            print(f"⚠️ Reintentando... {e}")
+            time.sleep(5)

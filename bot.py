@@ -7,51 +7,68 @@ import threading
 from flask import Flask
 from datetime import datetime
 
-# --- SERVIDOR WEB ---
+# --- 1. SERVIDOR WEB (Para mantener el bot vivo en Render) ---
 app = Flask(__name__)
+
 @app.route('/')
-def index(): return "Bot Live"
+def index():
+    return "CJKiller Bot is Active with New Token"
 
 def run_flask():
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
 
-# --- CONFIGURACIÓN ---
-TOKEN = "8106789282:AAGBmKZgELy8KSUT7K6d7mbFspFpxUzhG-M"
+# --- 2. CONFIGURACIÓN ---
+# Token actualizado satisfactoriamente
+TOKEN = "8106789282:AAFI6CEgWuL-nq5jpSf3vSD8pzIlwLvoBLQ"
 bot = telebot.TeleBot(TOKEN, threaded=False)
 
+# --- 3. LÓGICA DE ENCRIPTACIÓN ---
 def encrypt_adyen(card, month, year, cvv):
     try:
         gen_time = datetime.utcnow().isoformat() + "Z" 
-        payload = {"number": card, "cvc": cvv, "expiryMonth": month, "expiryYear": year, "generationtime": gen_time}
+        payload = {
+            "number": card, "cvc": cvv,
+            "expiryMonth": month, "expiryYear": year,
+            "generationtime": gen_time
+        }
         encoded = base64.b64encode(json.dumps(payload).encode()).decode()
         return {"success": True, "encrypted": f"adyenjs_0_1_25${encoded}"}
-    except: return {"success": False}
+    except:
+        return {"success": False}
 
+# --- 4. COMANDOS ---
 @bot.message_handler(commands=['start'])
-def start(m): bot.reply_to(m, "✅ Online")
+def send_welcome(message):
+    bot.reply_to(message, "🔥 **CJKILLER ONLINE**\n\nEl bot se ha reiniciado correctamente con el nuevo Token.\nUsa `/adyen CC|MES|ANO|CVV`", parse_mode="Markdown")
 
 @bot.message_handler(commands=['adyen'])
-def adyen(m):
+def cmd_adyen(message):
     try:
-        p = m.text.split()[1].split('|')
-        res = encrypt_adyen(p[0], p[1], p[2], p[3])
-        bot.reply_to(m, f"`{res['encrypted']}`", parse_mode="Markdown")
-    except: bot.reply_to(m, "❌ Formato incorrecto")
+        parts = message.text.split()
+        datos = parts[1].split('|')
+        res = encrypt_adyen(datos[0], datos[1], datos[2], datos[3])
+        if res["success"]:
+            bot.reply_to(message, f"💎 **RESULTADO:**\n`{res['encrypted']}`", parse_mode="Markdown")
+    except:
+        bot.reply_to(message, "❌ Formato: `/adyen CC|MES|ANO|CVV`")
 
+# --- 5. ARRANQUE SEGURO ---
 if __name__ == "__main__":
+    # Iniciar servidor web en segundo plano
     threading.Thread(target=run_flask, daemon=True).start()
     
-    # EL SECRETO: Limpieza simple y espera larga para que Telegram cierre el conflicto
-    print("⏳ Esperando 10 segundos para limpiar sesiones viejas...")
-    bot.remove_webhook()
-    time.sleep(10) 
+    print("⏳ Esperando 10 segundos para estabilizar la nueva clave...")
+    time.sleep(10)
     
-    print("🚀 Iniciando...")
+    # Limpiamos cualquier rastro previo en Telegram
+    bot.remove_webhook()
+    
+    print("🚀 Bot iniciado con éxito...")
     while True:
         try:
-            # interval=5 para no saturar y evitar el error 409
-            bot.polling(none_stop=True, interval=5, timeout=20)
+            # Intervalo de 3 segundos para evitar bloqueos por saturación
+            bot.polling(none_stop=True, interval=3, timeout=20)
         except Exception as e:
-            print(f"⚠️ Conflicto: {e}. Reintentando en 15s...")
-            time.sleep(15)
+            print(f"⚠️ Reintentando... {e}")
+            time.sleep(5)

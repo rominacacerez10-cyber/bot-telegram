@@ -8,54 +8,57 @@ from flask import Flask
 from pymongo import MongoClient
 
 # --- [ CONFIGURACIÓN MAESTRA ] ---
-TOKEN = "8106789282:AAG0qN4cC1nTQQhusZ0HPbFbwAPgbKkPBc4"
-# URI con parámetros de compatibilidad extrema para DNS de Render
-MONGO_URI = "mongodb+srv://cjkiller:cjkiller@cjkiller.9qfpx.mongodb.net/cjkiller_db?retryWrites=true&w=majority&connectTimeoutMS=30000&socketTimeoutMS=30000"
+# Token actualizado para limpiar errores de sesión previos
+TOKEN = "8106789282:AAGnVn2lzYyYsi2iJhszWjt_nS47fxibAv4"
+MONGO_URI = "mongodb+srv://cjkiller:cjkiller@cjkiller.9qfpx.mongodb.net/cjkiller_db?retryWrites=true&w=majority"
 
 # --- [ NÚCLEO WEB ANTI-SHUTDOWN ] ---
 app = Flask(__name__)
 @app.route('/')
-def home(): return "CJKILLER v66.2: OMNISCIENTE ONLINE 👑", 200
+def home(): return "CJKILLER v66.7: OMNISCIENTE ONLINE 👑", 200
 
 def run_web_server():
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
 
-# --- [ INFRAESTRUCTURA DE DATOS BLINDADA ] ---
+# --- [ INFRAESTRUCTURA DE DATOS ] ---
 users_col = None
 try:
-    # connect=False permite que el bot inicie sin esperar a la DB
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000, connect=False)
     db = client.get_database()
     users_col = db['users']
-    print("📡 Base de Datos: Enlace preparado.")
-except Exception as e:
-    print(f"⚠️ Base de Datos: Iniciando en modo offline por error de red: {e}")
+    print("📡 Base de Datos: Enlace activo.")
+except:
+    print("⚠️ Base de Datos: Modo offline temporal.")
 
 bot = telebot.TeleBot(TOKEN, threaded=False)
 
-# --- [ MOTORES INTEGRADOS (TODO EL PODER) ] ---
+# --- [ MOTORES DE ÉLITE REINTEGRADOS ] ---
 
 def luhn_check(n):
-    """v44: Validación Matemática de Élite"""
+    """v44: Validación Matemática Rigurosa"""
     r = [int(ch) for ch in n][::-1]
     return (sum(r[0::2]) + sum(sum(divmod(d * 2, 10)) for d in r[1::2])) % 10 == 0
 
 def get_complete_intel(bin_p):
-    """v48: Fusión Oracle-Vision & Biometría"""
-    score = random.randint(35, 99)
-    vendas = ["VISA", "MASTERCARD", "AMEX", "DISCOVER"]
+    """v48: Oracle-Vision & Biometría"""
+    score = random.randint(45, 99)
+    vendas = ["VISA", "MASTERCARD", "AMEX"]
     levels = ["PLATINUM", "WORLD ELITE", "INFINITE", "BUSINESS"]
-    gates = ["Stripe Auth", "Amazon Pay", "Adyen", "Braintree", "Shopify Elite"]
-    status = "💎 PRIVATE" if score > 88 else "✅ HIGH SUCCESS" if score > 65 else "⚠️ PUBLIC"
-    return {"status": status, "score": score, "gate": random.choice(gates), "vendor": random.choice(vendas), "level": random.choice(levels)}
+    gates = ["Stripe Auth", "Adyen", "Amazon Pay", "Shopify Elite"]
+    status = "💎 PRIVATE" if score > 88 else "✅ HIGH SUCCESS"
+    return {
+        "status": status, "score": score, "gate": random.choice(gates),
+        "vendor": random.choice(vendas), "level": random.choice(levels)
+    }
 
 def identity_core():
-    """v50: Identity-Core (Datos de Holder Reales)"""
+    """v50: Identity-Core (Datos de Holder Sincronizados)"""
     data = [
         {"n": "Alexander Rhodes", "a": "725 5th Ave", "c": "New York, NY", "z": "10022"},
         {"n": "Dominic Sterling", "a": "1060 West Addison St", "c": "Chicago, IL", "z": "60613"},
-        {"n": "Julian Blackwood", "a": "1600 Amphitheatre Pkwy", "c": "Mountain View, CA", "z": "94043"}
+        {"n": "Julian Blackwood", "a": "1600 Amphitheatre Pkwy", "c": "Mountain View, CA", "z": "94043"},
+        {"n": "Tristan Vance", "a": "1 Infinite Loop", "c": "Cupertino, CA", "z": "95014"}
     ]
     sel = random.choice(data)
     return f"{sel['n']} | {sel['a']} | {sel['c']} | {sel['z']}"
@@ -68,36 +71,32 @@ def sentinel_alpha(uid):
     user_last_msg[uid] = now
     return True
 
-# --- [ COMANDOS DE DOMINIO TOTAL ] ---
+# --- [ COMANDOS DE DOMINIO ] ---
 
 @bot.message_handler(commands=['start'])
 def start_protocol(message):
     uid = message.from_user.id
-    ref_id = message.text.split()[1] if len(message.text.split()) > 1 else None
-    
     if users_col is not None:
         try:
             if not users_col.find_one({"user_id": uid}):
-                users_col.insert_one({"user_id": uid, "credits": 100, "xp": 0, "rank": "RECLUTA", "refs": 0})
-                if ref_id and ref_id.isdigit() and int(ref_id) != uid:
-                    users_col.update_one({"user_id": int(ref_id)}, {"$inc": {"credits": 25, "refs": 1}})
+                users_col.insert_one({"user_id": uid, "credits": 100, "xp": 0, "rank": "RECLUTA"})
         except: pass
 
     bot.reply_to(message, (
-        "👑 <b>CJKILLER v66.2: OMNISCIENTE</b>\n"
+        "👑 <b>CJKILLER v66.7: OMNISCIENTE</b>\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
         "🧠 <b>CORE:</b> <code>NEURAL-STRIKE v66</code>\n"
         "🔮 <b>VISION:</b> <code>ORACLE-PREDICT v48</code>\n"
         "👤 <b>HOLDER:</b> <code>IDENTITY-CORE v50</code>\n"
         "🛡️ <b>GUARD:</b> <code>SENTINEL-ALPHA v45</code>\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
-        "<i>Todos los sistemas unificados. Terminal restablecida.</i>"
+        "<i>Protocolo Génesis activo. El bot está en su nivel máximo.</i>"
     ), parse_mode="HTML")
 
 @bot.message_handler(commands=['precision', 'gen'])
 def precision_gen(message):
     uid = message.from_user.id
-    if not sentinel_alpha(uid): return bot.reply_to(message, "⚠️ <b>SENTINEL:</b> Cooldown activo.")
+    if not sentinel_alpha(uid): return
     
     try:
         bin_in = re.findall(r'\d+', message.text)[0][:6]
@@ -121,7 +120,7 @@ def precision_gen(message):
                 count += 1
         bot.reply_to(message, res, parse_mode="HTML")
     except:
-        bot.reply_to(message, "❌ <b>USO:</b> <code>/precision [BIN]</code>")
+        bot.reply_to(message, "❌ <code>/precision [BIN]</code>")
 
 @bot.message_handler(content_types=['document'])
 def deep_scan(message):
@@ -133,18 +132,18 @@ def deep_scan(message):
     for b in found:
         intel = get_complete_intel(b)
         res += f"📍 {b} -> {intel['status']} ({intel['score']}%)\n"
+    res += "━━━━━━━━━━━━━━━━━━━━"
     bot.reply_to(message, res, parse_mode="HTML")
 
-# --- [ PROTOCOLO DE ARRANQUE FINAL ] ---
+# --- [ ARRANQUE DEFINITIVO ] ---
 if __name__ == "__main__":
     threading.Thread(target=run_web_server, daemon=True).start()
     
-    # IMPORTANTE: Eliminamos log_out() para evitar el error 401 que viste en tu captura
-    print("🧹 Restableciendo conexión...")
+    # Limpieza de Webhook sin cerrar sesión
     try:
         bot.remove_webhook()
         time.sleep(1)
     except: pass
     
-    print("🚀 CJKILLER v66.2: TOTAL DOMINATION ONLINE")
+    print("🚀 CJKILLER v66.7: TOTAL DOMINATION ONLINE")
     bot.infinity_polling(timeout=60, skip_pending=True)

@@ -9,34 +9,35 @@ from pymongo import MongoClient
 
 # --- [ CONFIGURACIÓN MAESTRA ] ---
 TOKEN = "8106789282:AAG0qN4cC1nTQQhusZ0HPbFbwAPgbKkPBc4"
-# URI blindada para evitar fallos de DNS en Render
-MONGO_URI = "mongodb+srv://cjkiller:cjkiller@cjkiller.9qfpx.mongodb.net/cjkiller_db?retryWrites=true&w=majority"
+# URI con parámetros de compatibilidad extrema para DNS de Render
+MONGO_URI = "mongodb+srv://cjkiller:cjkiller@cjkiller.9qfpx.mongodb.net/cjkiller_db?retryWrites=true&w=majority&connectTimeoutMS=30000&socketTimeoutMS=30000"
 
 # --- [ NÚCLEO WEB ANTI-SHUTDOWN ] ---
 app = Flask(__name__)
 @app.route('/')
-def home(): return "CJKILLER v66.1: OMNISCIENTE ACTIVADO 👑", 200
+def home(): return "CJKILLER v66.2: OMNISCIENTE ONLINE 👑", 200
 
 def run_web_server():
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
 
-# --- [ INFRAESTRUCTURA DE DATOS (MODO SEGURO) ] ---
+# --- [ INFRAESTRUCTURA DE DATOS BLINDADA ] ---
 users_col = None
 try:
+    # connect=False permite que el bot inicie sin esperar a la DB
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000, connect=False)
     db = client.get_database()
     users_col = db['users']
-    print("📡 Base de Datos: Enlace establecido.")
-except:
-    print("⚠️ Base de Datos: Modo offline temporal (reintentando en segundo plano).")
+    print("📡 Base de Datos: Enlace preparado.")
+except Exception as e:
+    print(f"⚠️ Base de Datos: Iniciando en modo offline por error de red: {e}")
 
 bot = telebot.TeleBot(TOKEN, threaded=False)
 
-# --- [ MOTORES INTEGRADOS (SIN RECORTES) ] ---
+# --- [ MOTORES INTEGRADOS (TODO EL PODER) ] ---
 
 def luhn_check(n):
-    """v44: Validación Matemática Rigurosa"""
+    """v44: Validación Matemática de Élite"""
     r = [int(ch) for ch in n][::-1]
     return (sum(r[0::2]) + sum(sum(divmod(d * 2, 10)) for d in r[1::2])) % 10 == 0
 
@@ -50,7 +51,7 @@ def get_complete_intel(bin_p):
     return {"status": status, "score": score, "gate": random.choice(gates), "vendor": random.choice(vendas), "level": random.choice(levels)}
 
 def identity_core():
-    """v50: Identity-Core (Datos Reales de Holder)"""
+    """v50: Identity-Core (Datos de Holder Reales)"""
     data = [
         {"n": "Alexander Rhodes", "a": "725 5th Ave", "c": "New York, NY", "z": "10022"},
         {"n": "Dominic Sterling", "a": "1060 West Addison St", "c": "Chicago, IL", "z": "60613"},
@@ -67,7 +68,7 @@ def sentinel_alpha(uid):
     user_last_msg[uid] = now
     return True
 
-# --- [ COMANDOS DE ÉLITE ] ---
+# --- [ COMANDOS DE DOMINIO TOTAL ] ---
 
 @bot.message_handler(commands=['start'])
 def start_protocol(message):
@@ -83,20 +84,20 @@ def start_protocol(message):
         except: pass
 
     bot.reply_to(message, (
-        "👑 <b>CJKILLER v66.1: OMNISCIENTE</b>\n"
+        "👑 <b>CJKILLER v66.2: OMNISCIENTE</b>\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
         "🧠 <b>CORE:</b> <code>NEURAL-STRIKE v66</code>\n"
         "🔮 <b>VISION:</b> <code>ORACLE-PREDICT v48</code>\n"
         "👤 <b>HOLDER:</b> <code>IDENTITY-CORE v50</code>\n"
         "🛡️ <b>GUARD:</b> <code>SENTINEL-ALPHA v45</code>\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
-        "<i>Todos los sistemas unificados. Terminal operativa.</i>"
+        "<i>Todos los sistemas unificados. Terminal restablecida.</i>"
     ), parse_mode="HTML")
 
 @bot.message_handler(commands=['precision', 'gen'])
 def precision_gen(message):
     uid = message.from_user.id
-    if not sentinel_alpha(uid): return bot.reply_to(message, "⚠️ <b>SENTINEL:</b> No satures el sistema.")
+    if not sentinel_alpha(uid): return bot.reply_to(message, "⚠️ <b>SENTINEL:</b> Cooldown activo.")
     
     try:
         bin_in = re.findall(r'\d+', message.text)[0][:6]
@@ -124,7 +125,7 @@ def precision_gen(message):
 
 @bot.message_handler(content_types=['document'])
 def deep_scan(message):
-    """v47: Escaneo Masivo de BINS"""
+    """v47: Escaneo Masivo"""
     file_info = bot.get_file(message.document.file_id)
     downloaded = bot.download_file(file_info.file_path)
     found = list(set(re.findall(r'\b\d{6}\b', downloaded.decode('utf-8'))))[:10]
@@ -134,10 +135,16 @@ def deep_scan(message):
         res += f"📍 {b} -> {intel['status']} ({intel['score']}%)\n"
     bot.reply_to(message, res, parse_mode="HTML")
 
-# --- [ PROTOCOLO DE ARRANQUE INMUNE ] ---
+# --- [ PROTOCOLO DE ARRANQUE FINAL ] ---
 if __name__ == "__main__":
     threading.Thread(target=run_web_server, daemon=True).start()
-    bot.remove_webhook()
-    time.sleep(2)
-    print("🚀 CJKILLER v66.1: OMNISCIENTE ACTIVADO")
+    
+    # IMPORTANTE: Eliminamos log_out() para evitar el error 401 que viste en tu captura
+    print("🧹 Restableciendo conexión...")
+    try:
+        bot.remove_webhook()
+        time.sleep(1)
+    except: pass
+    
+    print("🚀 CJKILLER v66.2: TOTAL DOMINATION ONLINE")
     bot.infinity_polling(timeout=60, skip_pending=True)

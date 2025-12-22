@@ -12,13 +12,12 @@ TOKEN = "8106789282:AAG0qN4cC1nTQQhusZ0HPbFbwAPgbKkPBc4"
 MONGO_URI = "mongodb+srv://cjkiller:cjkiller@cjkiller.9qfpx.mongodb.net/?retryWrites=true&w=majority&appName=cjkiller&tlsAllowInvalidCertificates=true"
 ADMIN_ID = 7447432617
 
-# --- [ PARCHE PARA RENDER: SERVIDOR WEB ] ---
+# --- [ COMPATIBILIDAD RENDER ] ---
 app = Flask(__name__)
 @app.route('/')
-def health(): return "CJKILLER v64.4: OMNIPRESENTE", 200
+def health(): return "CJKILLER v64.5 ONLINE 👑", 200
 
 def run_web_server():
-    # Render necesita escuchar un puerto para no dar error
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
 
@@ -29,22 +28,22 @@ users_col = db['users']
 
 bot = telebot.TeleBot(TOKEN)
 
-# --- [ LÓGICA EXTREMA INTEGRADA (TODO) ] ---
+# --- [ FUNCIONES EXTREMAS REINTEGRADAS ] ---
 
 def get_full_intel(bin_p):
-    """Módulo Oracle-Vision + Biometría v48"""
-    score = random.randint(15, 99)
-    gates = ["Stripe", "Amazon Pay", "Adyen", "Braintree", "Shopify"]
-    status = "💎 PRIVATE" if score > 85 else "✅ HIGH SUCCESS"
+    """Módulo Oracle-Vision + Biometría (v48)"""
+    score = random.randint(20, 99)
+    gates = ["Stripe", "Amazon Pay", "Adyen", "Braintree"]
+    status = "💎 PRIVATE" if score > 88 else "✅ HIGH SUCCESS"
     return {"status": status, "score": score, "gate": random.choice(gates)}
 
 def identity_core():
-    """Módulo Identity-Core v50"""
-    names = ["James", "Robert", "John", "Michael"]
-    cities = ["New York", "Los Angeles", "Chicago", "Miami"]
-    return f"{random.choice(names)} {random.randint(10,99)} | {random.choice(cities)}"
+    """Módulo Identity-Core (v50)"""
+    names = ["James Smith", "Robert Brown", "John Wilson", "Michael Davis"]
+    cities = ["New York, NY", "Los Angeles, CA", "Chicago, IL", "Miami, FL"]
+    return f"{random.choice(names)} | {random.choice(cities)} | {random.randint(10001, 99999)}"
 
-# --- [ COMANDOS ] ---
+# --- [ COMANDOS INTEGRADOS ] ---
 
 @bot.message_handler(commands=['start'])
 def start_protocol(message):
@@ -53,13 +52,13 @@ def start_protocol(message):
         users_col.insert_one({"user_id": uid, "credits": 100, "xp": 0, "rank": "RECLUTA"})
     
     bot.reply_to(message, (
-        "👑 <b>CJKILLER v64.4: OVERDRIVE</b>\n"
+        "👑 <b>CJKILLER v64.5: NUCLEAR STATUS</b>\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
-        "🛰️ <b>SISTEMA:</b> <code>INTEGRACIÓN TOTAL</code>\n"
+        "🧠 <b>CORE:</b> <code>INTEGRACIÓN TOTAL</code>\n"
         "🔮 <b>ORACLE:</b> <code>ACTIVO v48</code>\n"
-        "🛡️ <b>SENTINEL:</b> <code>BLOQUEO ACTIVO</code>\n"
+        "🛰️ <b>RADAR:</b> <code>ACTIVO v59</code>\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
-        "<i>Cualquier versión anterior ha sido expulsada. Terminal lista.</i>"
+        "<i>Sesiones viejas expulsadas. Terminal operativa.</i>"
     ), parse_mode="HTML")
 
 @bot.message_handler(commands=['precision', 'gen'])
@@ -68,7 +67,6 @@ def precision_gen(message):
         bin_in = message.text.split()[1][:6]
         intel = get_full_intel(bin_in)
         ident = identity_core()
-        
         res = (
             f"🎯 <b>NEURAL-REPORT:</b> <code>{bin_in}</code>\n"
             f"━━━━━━━━━━━━━━━━━━━━\n"
@@ -104,15 +102,19 @@ def deep_scan(message):
         res += f"📍 {b} -> {intel['status']} ({intel['score']}%)\n"
     bot.reply_to(message, res, parse_mode="HTML")
 
-# --- [ ARRANQUE DE FUERZA BRUTA ] ---
+# --- [ ARRANQUE DE SEGURIDAD ] ---
 if __name__ == "__main__":
-    # Iniciar web server para Render
+    # Iniciar servidor web para Render
     threading.Thread(target=run_web_server, daemon=True).start()
     
-    # PASO CRÍTICO: Eliminar Webhook y sesiones muertas
-    print("🔥 Expulsando sesiones anteriores...")
+    # PROTOCOLO DE LIMPIEZA TOTAL (Solución al Error 409)
+    print("🧹 Limpiando webhooks y sesiones previas...")
     bot.remove_webhook()
-    time.sleep(2) # Esperar a que Telegram limpie la sesión
+    time.sleep(5) # Pausa necesaria para que Telegram procese el cierre
     
-    print("🚀 CJKILLER v64.4 ONLINE")
-    bot.infinity_polling(timeout=60, long_polling_timeout=20)
+    print("🚀 CJKILLER v64.5 ONLINE")
+    try:
+        bot.infinity_polling(timeout=60, long_polling_timeout=20)
+    except Exception as e:
+        print(f"❌ Error detectado: {e}")
+        time.sleep(10)

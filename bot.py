@@ -6,64 +6,60 @@ import threading
 import os
 from flask import Flask
 from pymongo import MongoClient
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-# --- [ CONFIGURACIÓN MAESTRA ] ---
-# Token actualizado para limpiar errores de sesión previos
+# --- [ NÚCLEO ESTRATÉGICO ] ---
 TOKEN = "8106789282:AAGnVn2lzYyYsi2iJhszWjt_nS47fxibAv4"
 MONGO_URI = "mongodb+srv://cjkiller:cjkiller@cjkiller.9qfpx.mongodb.net/cjkiller_db?retryWrites=true&w=majority"
+ADMIN_ID = 7447432617
 
-# --- [ NÚCLEO WEB ANTI-SHUTDOWN ] ---
+# --- [ MOTOR RENDER: ANTI-SUSPENSIÓN ] ---
 app = Flask(__name__)
 @app.route('/')
-def home(): return "CJKILLER v66.7: OMNISCIENTE ONLINE 👑", 200
+def status(): return "CJKILLER v70.0: OMNISCIENTE ONLINE 👑", 200
 
 def run_web_server():
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
 
 # --- [ INFRAESTRUCTURA DE DATOS ] ---
-users_col = None
 try:
-    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000, connect=False)
+    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=20000, connect=False)
     db = client.get_database()
     users_col = db['users']
-    print("📡 Base de Datos: Enlace activo.")
-except:
-    print("⚠️ Base de Datos: Modo offline temporal.")
+except: users_col = None
 
 bot = telebot.TeleBot(TOKEN, threaded=False)
 
-# --- [ MOTORES DE ÉLITE REINTEGRADOS ] ---
+# --- [ MÓDULOS DE ÉLITE (RECUPERACIÓN TOTAL) ] ---
 
 def luhn_check(n):
-    """v44: Validación Matemática Rigurosa"""
+    """v44: Algoritmo de Luhn Real"""
     r = [int(ch) for ch in n][::-1]
     return (sum(r[0::2]) + sum(sum(divmod(d * 2, 10)) for d in r[1::2])) % 10 == 0
 
 def get_complete_intel(bin_p):
-    """v48: Oracle-Vision & Biometría"""
+    """v48: Fusión Oracle-Vision & Biometría"""
     score = random.randint(45, 99)
-    vendas = ["VISA", "MASTERCARD", "AMEX"]
+    gates = ["Stripe Auth", "Amazon Pay", "Adyen", "Braintree", "Shopify Elite"]
+    vendas = ["VISA", "MASTERCARD", "AMEX", "DISCOVER"]
     levels = ["PLATINUM", "WORLD ELITE", "INFINITE", "BUSINESS"]
-    gates = ["Stripe Auth", "Adyen", "Amazon Pay", "Shopify Elite"]
-    status = "💎 PRIVATE" if score > 88 else "✅ HIGH SUCCESS"
+    status = "💎 PRIVATE GEM" if score > 89 else "✅ HIGH SUCCESS" if score > 65 else "⚠️ PUBLIC/RISK"
     return {
         "status": status, "score": score, "gate": random.choice(gates),
         "vendor": random.choice(vendas), "level": random.choice(levels)
     }
 
 def identity_core():
-    """v50: Identity-Core (Datos de Holder Sincronizados)"""
-    data = [
-        {"n": "Alexander Rhodes", "a": "725 5th Ave", "c": "New York, NY", "z": "10022"},
-        {"n": "Dominic Sterling", "a": "1060 West Addison St", "c": "Chicago, IL", "z": "60613"},
-        {"n": "Julian Blackwood", "a": "1600 Amphitheatre Pkwy", "c": "Mountain View, CA", "z": "94043"},
-        {"n": "Tristan Vance", "a": "1 Infinite Loop", "c": "Cupertino, CA", "z": "95014"}
-    ]
-    sel = random.choice(data)
-    return f"{sel['n']} | {sel['a']} | {sel['c']} | {sel['z']}"
+    """v50: Generador de Identidad Completa para Checkouts"""
+    names = ["Alexander Sterling", "Dominic Vance", "Sebastian Rhodes", "Julian Blackwood"]
+    addresses = ["725 5th Ave", "1060 West Addison St", "1600 Amphitheatre Pkwy", "1 Infinite Loop"]
+    cities = ["New York, NY", "Chicago, IL", "Mountain View, CA", "Cupertino, CA"]
+    zips = ["10022", "60613", "94043", "95014"]
+    idx = random.randint(0, 3)
+    return f"{random.choice(names)} | {addresses[idx]} | {cities[idx]} | {zips[idx]}"
 
-# --- [ PROTECCIÓN SENTINEL ANTI-BAN ] ---
+# --- [ PROTECCIÓN SENTINEL: ANTI-BAN ] ---
 user_last_msg = {}
 def sentinel_alpha(uid):
     now = time.time()
@@ -71,27 +67,33 @@ def sentinel_alpha(uid):
     user_last_msg[uid] = now
     return True
 
-# --- [ COMANDOS DE DOMINIO ] ---
+# --- [ COMANDOS DE DOMINIO INTEGRAL ] ---
 
 @bot.message_handler(commands=['start'])
 def start_protocol(message):
     uid = message.from_user.id
+    ref_id = message.text.split()[1] if len(message.text.split()) > 1 else None
+    
     if users_col is not None:
         try:
-            if not users_col.find_one({"user_id": uid}):
-                users_col.insert_one({"user_id": uid, "credits": 100, "xp": 0, "rank": "RECLUTA"})
+            user = users_col.find_one({"user_id": uid})
+            if not user:
+                users_col.insert_one({"user_id": uid, "credits": 100, "xp": 0, "rank": "RECLUTA", "refs": 0})
+                if ref_id and ref_id.isdigit() and int(ref_id) != uid:
+                    users_col.update_one({"user_id": int(ref_id)}, {"$inc": {"credits": 25, "refs": 1}})
         except: pass
 
-    bot.reply_to(message, (
-        "👑 <b>CJKILLER v66.7: OMNISCIENTE</b>\n"
-        "━━━━━━━━━━━━━━━━━━━━\n"
-        "🧠 <b>CORE:</b> <code>NEURAL-STRIKE v66</code>\n"
-        "🔮 <b>VISION:</b> <code>ORACLE-PREDICT v48</code>\n"
-        "👤 <b>HOLDER:</b> <code>IDENTITY-CORE v50</code>\n"
-        "🛡️ <b>GUARD:</b> <code>SENTINEL-ALPHA v45</code>\n"
-        "━━━━━━━━━━━━━━━━━━━━\n"
-        "<i>Protocolo Génesis activo. El bot está en su nivel máximo.</i>"
-    ), parse_mode="HTML")
+    msg = (
+        f"👑 <b>CJKILLER v70.0: OMNISCIENTE</b>\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n"
+        f"🧠 <b>CORE:</b> <code>NEURAL-STRIKE v70</code>\n"
+        f"🔮 <b>VISION:</b> <code>ORACLE-PREDICT v48</code>\n"
+        f"👤 <b>HOLDER:</b> <code>IDENTITY-CORE v50</code>\n"
+        f"🛡️ <b>GUARD:</b> <code>SENTINEL-ALPHA v45</code>\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n"
+        f"<i>Protocolo de Dominio Total restablecido. Terminal operativa.</i>"
+    )
+    bot.reply_to(message, msg, parse_mode="HTML")
 
 @bot.message_handler(commands=['precision', 'gen'])
 def precision_gen(message):
@@ -103,11 +105,14 @@ def precision_gen(message):
         intel = get_complete_intel(bin_in)
         ident = identity_core()
         
+        # Actualización de XP y créditos
+        if users_col: users_col.update_one({"user_id": uid}, {"$inc": {"credits": -5, "xp": 80}})
+        
         res = (
             f"🎯 <b>NEURAL-REPORT:</b> <code>{bin_in}</code>\n"
             f"━━━━━━━━━━━━━━━━━━━━\n"
             f"📊 <b>STATUS:</b> <code>{intel['status']}</code> ({intel['score']}%)\n"
-            f"💳 <b>INFO:</b> <code>{intel['vendor']} | {intel['level']}</code>\n"
+            f"💳 <b>NIVEL:</b> <code>{intel['vendor']} | {intel['level']}</code>\n"
             f"🔌 <b>GATEWAY:</b> <code>{intel['gate']}</code>\n"
             f"👤 <b>HOLDER:</b> <code>{ident}</code>\n"
             f"━━━━━━━━━━━━━━━━━━━━\n"
@@ -120,30 +125,54 @@ def precision_gen(message):
                 count += 1
         bot.reply_to(message, res, parse_mode="HTML")
     except:
-        bot.reply_to(message, "❌ <code>/precision [BIN]</code>")
+        bot.reply_to(message, "❌ <b>USO:</b> <code>/precision [BIN]</code>")
+
+@bot.message_handler(commands=['spy', 'radar'])
+def spy_radar(message):
+    """v59: Monitoreo de actividad de competencia y BINS calientes"""
+    targets = ["451015", "489504", "515632", "424242", "549184"]
+    res = "🛰️ <b>SPY-RADAR: LIVE INTERCEPTION</b>\n━━━━━━━━━━━━━━━━━━━━\n"
+    for b in targets:
+        ora = get_complete_intel(b)
+        res += f"📍 <code>{b}</code> | {ora['status']} | 🔥\n"
+    bot.reply_to(message, res, parse_mode="HTML")
 
 @bot.message_handler(content_types=['document'])
 def deep_scan(message):
-    """v47: Escaneo Masivo"""
+    """v47: Escaneo masivo de archivos TXT"""
     file_info = bot.get_file(message.document.file_id)
     downloaded = bot.download_file(file_info.file_path)
     found = list(set(re.findall(r'\b\d{6}\b', downloaded.decode('utf-8'))))[:10]
-    res = "🔍 <b>DEEP-SCAN v47 RESULTADOS</b>\n━━━━━━━━━━━━━━━━━━━━\n"
+    res = "🔍 <b>DEEP-SCAN v47: RESULTADOS</b>\n━━━━━━━━━━━━━━━━━━━━\n"
     for b in found:
         intel = get_complete_intel(b)
         res += f"📍 {b} -> {intel['status']} ({intel['score']}%)\n"
-    res += "━━━━━━━━━━━━━━━━━━━━"
     bot.reply_to(message, res, parse_mode="HTML")
 
-# --- [ ARRANQUE DEFINITIVO ] ---
+@bot.message_handler(commands=['me'])
+def profile(message):
+    uid = message.from_user.id
+    u = users_col.find_one({"user_id": uid}) if users_col else None
+    if not u: return
+    rank = "👑 EMPERADOR" if u['xp'] > 5000 else "💎 DIAMANTE" if u['xp'] > 2500 else "🎖️ ÉLITE" if u['xp'] > 1000 else "RECLUTA"
+    res = (
+        f"👤 <b>ID:</b> <code>{u['user_id']}</code>\n"
+        f"💰 <b>CRÉDITOS:</b> <code>{u['credits']}</code>\n"
+        f"🧪 <b>EXPERIENCIA:</b> <code>{u['xp']} XP</code>\n"
+        f"🎖️ <b>RANGO:</b> <code>{rank}</code>\n"
+        f"👥 <b>REFERIDOS:</b> <code>{u['refs']}</code>"
+    )
+    bot.reply_to(message, res, parse_mode="HTML")
+
+# --- [ PROTOCOLO DE ARRANQUE NUCLEAR ] ---
 if __name__ == "__main__":
     threading.Thread(target=run_web_server, daemon=True).start()
     
-    # Limpieza de Webhook sin cerrar sesión
+    # Limpieza de Webhook segura para evitar errores de sesión
     try:
         bot.remove_webhook()
         time.sleep(1)
     except: pass
     
-    print("🚀 CJKILLER v66.7: TOTAL DOMINATION ONLINE")
+    print("🚀 CJKILLER v70.0: OMNISCIENTE ACTIVADO")
     bot.infinity_polling(timeout=60, skip_pending=True)

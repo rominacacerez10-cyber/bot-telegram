@@ -101,7 +101,7 @@ def handle_check(message):
         info = lookup_bin(cc[:6])
         
         # 3. Verificación de STATUS REAL
-        status = CCChecker.check_gate_stripe(cc, mm, yy, cvv)
+        status = CCChecker.check_gate_real(cc, mm, yy, cvv)
         
         # DISEÑO OMNIPOTENTE DE RESPUESTA
         response = f"<b>💳 CHECKER RESULT</b>\n"

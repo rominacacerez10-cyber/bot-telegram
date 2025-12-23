@@ -20,6 +20,7 @@ from server_monitor import Monitor
 from keep_alive import keep_alive
 from fake_identity import FakeID
 from api_resort import CloudLookup
+from ai_brain import AIEngine
 
 # [DEF 1] INICIALIZACIÓN DE POTENCIA (5000 THREADS)
 # Esto permite que el bot procese ataques y consultas masivas sin lag.
@@ -35,6 +36,38 @@ def check_access(message):
         bot.reply_to(message, f"<b>🛡️ FIREWALL: {reason}</b>", parse_mode="HTML")
         return False
     return True
+
+# -----------------------------------------------------------------
+# [VIP/ADMIN] /IA - CONSULTA AL NÚCLEO NEURONAL
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['ia', 'ask'])
+def ai_command(message):
+    if not check_access(message): return
+    
+    # Verificación de rango (IA es solo para VIP o Admin)
+    is_vip = Database.check_vip(message.from_user.id)
+    if not is_vip and message.from_user.id != ADMIN_ID:
+        return bot.reply_to(message, "⭐ <b>EL ACCESO A LA IA ES EXCLUSIVO PARA USUARIOS VIP.</b>", parse_mode="HTML")
+    
+    try:
+        user_query = message.text.split(None, 1)[1]
+        msg_wait = bot.reply_to(message, "🧠 <code>PENSANDO...</code>", parse_mode="HTML")
+        
+        # Llamada al cerebro
+        ai_response = AIEngine.ask_ai(user_query)
+        
+        # Formato visual imponente
+        response_data = {
+            "PREGUNTA": user_query[:30] + "...",
+            "IA_RESPONSE": ai_response,
+            "ENGINE": "NEURAL_V2"
+        }
+        
+        output = Visuals.format_table("AI INTELLIGENCE", response_data)
+        bot.edit_message_text(output, message.chat.id, msg_wait.message_id, parse_mode="HTML")
+        
+    except IndexError:
+        bot.reply_to(message, "⚠️ <code>USO: /ia [TU PREGUNTA]</code>", parse_mode="HTML")
 
 # -----------------------------------------------------------------
 # [ADMIN] /BROADCAST - DIFUSIÓN GLOBAL OMNIPOTENTE

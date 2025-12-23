@@ -41,3 +41,9 @@ def lookup_bin(bin_val):
     return BIN_DATA.get(key, {
         "b": "GLOBAL NETWORK", "c": "INTERNATIONAL 🌐", "t": "UNKNOWN", "l": "STANDARD"
     })
+class Database:
+    @staticmethod
+    def check_vip(user_id):
+        # Por ahora, todos son VIP para que no te dé errores
+        # Luego conectaremos esto a MongoDB
+        return True

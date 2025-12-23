@@ -62,6 +62,48 @@ def check_access(message):
         return False
     return True
 
+from extrapolator_engine import Extrapolator
+
+# -----------------------------------------------------------------
+# [VIP] /EXTRA - EXTRAPOLADOR DE ALTA PRECISIÓN
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['extra', 'ex'])
+def handle_extra(message):
+    if not check_access(message): return
+    
+    try:
+        args = message.text.split()
+        if len(args) < 2:
+            return bot.reply_to(message, "⚠️ <b>USO:</b> <code>/extra [CARD_COMPLETA]</code>", parse_mode="HTML")
+
+        full_card = args[1].split('|')[0] # Toma solo el número si viene con fecha
+        msg_wait = bot.reply_to(message, "🧬 <code>EXTRAPOLANDO ADN BANCARIO...</code>", parse_mode="HTML")
+        
+        # 1. Obtenemos info del BIN
+        info = lookup_bin(full_card[:6])
+        
+        # 2. Generamos las variaciones
+        variations = Extrapolator.extrapolate(full_card, 15)
+
+        if variations:
+            # Reutilizamos la fecha y CVV de la original si el usuario los puso
+            # o generamos unos nuevos pro.
+            parts = args[1].split('|')
+            date_cvv = f"|{parts[1]}|{parts[2]}|{parts[3]}" if len(parts) > 3 else "|01|2028|000"
+            
+            response = f"<b>🧬 EXTRAPOLACIÓN EXITOSA</b>\n"
+            response += f"<b>BASE:</b> <code>{full_card[:6]}xxxxxx{full_card[-4:]}</code>\n"
+            response += f"<b>BANK:</b> {info['b']} | {info['c']}\n"
+            response += "─" * 20 + "\n"
+            response += "\n".join([f"<code>{v}{date_cvv}</code>" for v in variations])
+            
+            bot.edit_message_text(response, message.chat.id, msg_wait.message_id, parse_mode="HTML")
+        else:
+            bot.edit_message_text("❌ Error al procesar la tarjeta.", message.chat.id, msg_wait.message_id)
+
+    except Exception as e:
+        bot.reply_to(message, f"🚨 <b>DEBUG:</b> <code>{str(e)}</code>", parse_mode="HTML")
+
 # -----------------------------------------------------------------
 # [ADMIN] /SCRAP - EXTRACTOR DE BINS EN MASA
 # -----------------------------------------------------------------

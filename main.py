@@ -50,6 +50,7 @@ from api_resort import CloudLookup
 from ai_brain import AIEngine
 from file_manager import SystemExplorer
 from bin_scrapper import BinScrapper
+from network_engine import NetMonitor
 
 # [DEF 1] INICIALIZACIÓN DE POTENCIA (5000 THREADS)
 # Esto permite que el bot procese ataques y consultas masivas sin lag.
@@ -65,6 +66,43 @@ def check_access(message):
         bot.reply_to(message, f"<b>🛡️ FIREWALL: {reason}</b>", parse_mode="HTML")
         return False
     return True
+
+# -----------------------------------------------------------------
+# [COMMAND] /HOST - AUDITOR DE SERVIDORES Y PUERTOS
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['host', 'ping'])
+def handle_host_check(message):
+    if not check_access(message): return
+    
+    try:
+        args = message.text.split()
+        if len(args) < 2:
+            return bot.reply_to(message, "⚠️ <b>USO:</b> <code>/host [URL_O_IP] [PUERTO_OPCIONAL]</code>", parse_mode="HTML")
+            
+        target = args[1].replace("https://", "").replace("http://", "").split("/")[0]
+        port = args[2] if len(args) > 3 else None
+        
+        msg_wait = bot.reply_to(message, "🔌 <code>ESTABLECIENDO CONEXIÓN...</code>", parse_mode="HTML")
+        
+        # 1. Chequeo de URL
+        site_data = NetMonitor.check_host(f"http://{target}")
+        
+        # 2. Chequeo de Puerto (Si se proporciona)
+        port_status = NetMonitor.port_scan(target, args[2]) if len(args) > 2 else "NOT SCANNED"
+        
+        results = {
+            "TARGET": target,
+            "STATUS": site_data["STATUS"],
+            "LATENCY": site_data["LATENCY"],
+            "SERVER": site_data["SERVER"],
+            "PORT_ST": port_status
+        }
+        
+        output = Visuals.format_table(f"HOST AUDIT", results)
+        bot.edit_message_text(output, message.chat.id, msg_wait.message_id, parse_mode="HTML")
+
+    except Exception as e:
+        bot.reply_to(message, f"🚨 <b>ERROR DE RED:</b> <code>{str(e)}</code>", parse_mode="HTML")
 
 # -----------------------------------------------------------------
 # [VIP] /AUDIT - ANÁLISIS PROFUNDO DE BIN

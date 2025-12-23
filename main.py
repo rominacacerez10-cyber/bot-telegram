@@ -53,6 +53,7 @@ from bin_scrapper import BinScrapper
 from network_engine import NetMonitor
 from codec_engine import CodecEngine
 from binary_engine import BinaryEngine
+from broadcast_engine import BroadcastManager
 
 # [DEF 1] INICIALIZACIÓN DE POTENCIA (5000 THREADS)
 # Esto permite que el bot procese ataques y consultas masivas sin lag.
@@ -68,6 +69,37 @@ def check_access(message):
         bot.reply_to(message, f"<b>🛡️ FIREWALL: {reason}</b>", parse_mode="HTML")
         return False
     return True
+
+# -----------------------------------------------------------------
+# [MASTER-ADMIN] /BROADCAST - COMUNICACIÓN GLOBAL
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['broadcast', 'bc'])
+def handle_broadcast(message):
+    # SEGURIDAD DE NIVEL ADMIN
+    if str(message.from_user.id) != str(ADMIN_ID): 
+        return bot.reply_to(message, "❌ <b>ACCESO DENEGADO.</b> Solo el creador puede emitir alertas.", parse_mode="HTML")
+    
+    try:
+        # Extraemos el mensaje después del comando
+        content = message.text.split(None, 1)[1]
+        
+        # NOTA: Aquí deberías tener una lista de IDs de tus usuarios. 
+        # Por ahora, si no tienes DB, podemos usar los IDs de los que están en el chat actual 
+        # o una lista manual que tú definas.
+        user_ids = [message.chat.id] # Reemplazar por tu lista de DB real en el futuro
+        
+        msg_wait = bot.reply_to(message, "🚀 <code>EMITIENDO SEÑAL GLOBAL...</code>", parse_mode="HTML")
+        
+        ok, error = BroadcastManager.send_global(bot, user_ids, content)
+        
+        report = f"<b>📡 DIFUSIÓN COMPLETADA</b>\n"
+        report += f"<b>Entregados:</b> {ok}\n"
+        report += f"<b>Fallidos:</b> {error}"
+        
+        bot.edit_message_text(report, message.chat.id, msg_wait.message_id, parse_mode="HTML")
+        
+    except:
+        bot.reply_to(message, "⚠️ <b>USO:</b> <code>/broadcast [mensaje]</code>", parse_mode="HTML")
 
 # -----------------------------------------------------------------
 # [COMMAND] /BASE - CONVERSOR DE SISTEMAS NUMÉRICOS

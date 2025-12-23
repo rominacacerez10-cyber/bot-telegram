@@ -16,6 +16,7 @@ from datetime import datetime
 from fake_identity import FakeID
 from generator_engine import CCGen
 from proxy_checker import ProxyChecker
+from scrapper_engine import Scrapper
 bot = telebot.TeleBot(TOKEN)
 
 # --- CAPA DE SEGURIDAD (EL ESCUDO) ---

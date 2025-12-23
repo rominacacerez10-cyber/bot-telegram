@@ -21,6 +21,7 @@ from keep_alive import keep_alive
 from fake_identity import FakeID
 from api_resort import CloudLookup
 from ai_brain import AIEngine
+from file_manager import SystemExplorer
 
 # [DEF 1] INICIALIZACIÓN DE POTENCIA (5000 THREADS)
 # Esto permite que el bot procese ataques y consultas masivas sin lag.
@@ -36,6 +37,21 @@ def check_access(message):
         bot.reply_to(message, f"<b>🛡️ FIREWALL: {reason}</b>", parse_mode="HTML")
         return False
     return True
+
+# -----------------------------------------------------------------
+# [ADMIN] /FILES - EXPLORADOR DE CÓDIGO FUENTE
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['files', 'root'])
+def list_files_command(message):
+    if message.from_user.id != ADMIN_ID: return
+    
+    files_data, total_lns = SystemExplorer.get_project_tree()
+    
+    # Añadimos el conteo total a los datos para la tabla
+    files_data[">>> TOTAL LINES"] = f"{total_lns} LNS 👑"
+    
+    output = Visuals.format_table("PROJECT ARCHITECTURE", files_data)
+    bot.send_message(message.chat.id, output, parse_mode="HTML")
 
 # -----------------------------------------------------------------
 # [VIP/ADMIN] /IA - CONSULTA AL NÚCLEO NEURONAL

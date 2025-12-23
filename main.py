@@ -52,6 +52,7 @@ from file_manager import SystemExplorer
 from bin_scrapper import BinScrapper
 from network_engine import NetMonitor
 from codec_engine import CodecEngine
+from binary_engine import BinaryEngine
 
 # [DEF 1] INICIALIZACIÓN DE POTENCIA (5000 THREADS)
 # Esto permite que el bot procese ataques y consultas masivas sin lag.
@@ -67,6 +68,33 @@ def check_access(message):
         bot.reply_to(message, f"<b>🛡️ FIREWALL: {reason}</b>", parse_mode="HTML")
         return False
     return True
+
+# -----------------------------------------------------------------
+# [COMMAND] /BASE - CONVERSOR DE SISTEMAS NUMÉRICOS
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['base', 'bin'])
+def handle_base_convert(message):
+    if not check_access(message): return
+    
+    try:
+        # Obtenemos lo que el usuario quiere convertir
+        args = message.text.split(None, 1)
+        if len(args) < 2:
+            return bot.reply_to(message, "⚠️ <b>USO:</b> <code>/base [Número_o_Texto]</code>", parse_mode="HTML")
+
+        target = args[1]
+        msg_wait = bot.reply_to(message, "🔢 <code>PROCESANDO BITS...</code>", parse_mode="HTML")
+        
+        # Ejecutamos la conversión
+        data = BinaryEngine.convert_all(target)
+        
+        # Usamos nuestra clase Visuals para mostrar la tabla pro
+        output = Visuals.format_table(f"CONVERTER: {target[:10]}", data)
+        
+        bot.edit_message_text(output, message.chat.id, msg_wait.message_id, parse_mode="HTML")
+
+    except Exception as e:
+        bot.reply_to(message, f"🚨 <b>ERROR:</b> <code>{str(e)}</code>", parse_mode="HTML")
 
 # -----------------------------------------------------------------
 # [COMMAND] /ENCODE - CODIFICACIÓN MÚLTIPLE

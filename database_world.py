@@ -36,11 +36,40 @@ BIN_DATA = {
 }
 
 # Lógica de búsqueda optimizada para diccionarios masivos
+import requests
+
 def lookup_bin(bin_val):
+    # 1. Intento de búsqueda local (lo que ya tienes)
     key = str(bin_val)[:6]
-    return BIN_DATA.get(key, {
-        "b": "GLOBAL NETWORK", "c": "INTERNATIONAL 🌐", "t": "UNKNOWN", "l": "STANDARD"
-    })
+    local_result = BIN_DATA.get(key)
+    
+    if local_result:
+        local_result['SOURCE'] = "LOCAL_DB 🏛️"
+        return local_result
+
+    # 2. BÚSQUEDA GLOBAL (Si no está en la local)
+    try:
+        response = requests.get(f"https://lookup.binlist.net/{key}", timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            return {
+                "b": data.get("bank", {}).get("name", "UNKNOWN BANK").upper(),
+                "c": f"{data.get('country', {}).get('name', 'UNKNOWN')} {data.get('country', {}).get('emoji', '')}".upper(),
+                "t": f"{data.get('scheme', '???')} - {data.get('type', '???')}".upper(),
+                "l": data.get("brand", "STANDARD").upper(),
+                "SOURCE": "CLOUD_NETWORK 🛰️"
+            }
+    except:
+        pass
+
+    # 3. Fallback final si nada funciona
+    return {
+        "b": "NOT FOUND",
+        "c": "UNKNOWN",
+        "t": "UNKNOWN",
+        "l": "STANDARD",
+        "SOURCE": "NONE"
+            }
 class Database:
     @staticmethod
     def check_vip(user_id):

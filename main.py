@@ -19,6 +19,7 @@ from economy_system import Economy
 from server_monitor import Monitor
 from keep_alive import keep_alive
 from fake_identity import FakeID
+from api_resort import CloudLookup
 
 # [DEF 1] INICIALIZACIÓN DE POTENCIA (5000 THREADS)
 # Esto permite que el bot procese ataques y consultas masivas sin lag.
@@ -34,6 +35,77 @@ def check_access(message):
         bot.reply_to(message, f"<b>🛡️ FIREWALL: {reason}</b>", parse_mode="HTML")
         return False
     return True
+    
+# -----------------------------------------------------------------
+# [ADMIN] /STATUS - MONITOR DE SALUD DEL NÚCLEO
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['status', 'health'])
+def status_command(message):
+    if message.from_user.id != ADMIN_ID: return
+    
+    stats = Monitor.get_stats()
+    output = Visuals.format_table("SERVER HEALTH", stats)
+    
+    bot.send_message(message.chat.id, output, parse_mode="HTML")
+
+# -----------------------------------------------------------------
+# [USER] /BAL - CONSULTA DE CRÉDITOS
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['bal', 'money'])
+def balance_command(message):
+    if not check_access(message): return
+    
+    balance = Economy.get_balance(message.from_user.id)
+    
+    bal_data = {
+        "USUARIO": f"@{message.from_user.username}",
+        "CRÉDITOS": f"{balance} CC",
+        "MÉTODO": "OFFICIAL_WALLET",
+        "ESTADO": "ACTUALIZADO ✅"
+    }
+    
+    output = Visuals.format_table("MI BILLETERA", bal_data)
+    bot.send_message(message.chat.id, output, parse_mode="HTML")
+
+# -----------------------------------------------------------------
+# [ADMIN] /ADD - CARGA DE SALDO MANUAL
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['add'])
+def add_credits_command(message):
+    if message.from_user.id != ADMIN_ID: return
+    
+    try:
+        # Uso: /add [ID_USUARIO] [CANTIDAD]
+        args = message.text.split()
+        target_id = int(args[1])
+        amount = int(args[2])
+        
+        Economy.add_credits(target_id, amount)
+        
+        bot.reply_to(message, f"💰 <b>TRANSACCIÓN EXITOSA:</b> Se han añadido {amount} créditos al ID <code>{target_id}</code>.", parse_mode="HTML")
+    except:
+        bot.reply_to(message, "⚠️ <code>USO: /add [USER_ID] [CANTIDAD]</code>", parse_mode="HTML")
+# -----------------------------------------------------------------
+# [TOOL] /IP - RASTREO Y SEGURIDAD DE CONEXIÓN
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['ip'])
+def track_ip_command(message):
+    if not check_access(message): return
+    
+    try:
+        ip_addr = message.text.split()[1]
+        bot.send_message(message.chat.id, "🛰️ <code>RASTREANDO DIRECCIÓN...</code>", parse_mode="HTML")
+        
+        intel = CloudLookup.check_ip(ip_addr)
+        
+        if intel:
+            output = Visuals.format_table(f"IP INTEL: {ip_addr}", intel)
+            bot.send_message(message.chat.id, output, parse_mode="HTML")
+        else:
+            bot.reply_to(message, "❌ <b>IP NO VÁLIDA O FUERA DE RANGO.</b>", parse_mode="HTML")
+            
+    except:
+        bot.reply_to(message, "⚠️ <code>USO: /ip [DIRECCIÓN-IP]</code>", parse_mode="HTML")
 
 # -----------------------------------------------------------------
 # [ADMIN] /UNBAN - RESTAURACIÓN DE ACCESO TOTAL

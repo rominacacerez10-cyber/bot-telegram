@@ -63,6 +63,33 @@ def check_access(message):
         return False
     return True
 
+# -----------------------------------------------------------------
+# [COMMAND] /PROXY - ANALIZADOR DE SEGURIDAD DE RED
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['proxy', 'ip'])
+def handle_proxy(message):
+    if not check_access(message): return
+    
+    try:
+        args = message.text.split()
+        if len(args) < 2:
+            return bot.reply_to(message, "⚠️ <b>USO:</b> <code>/proxy [DIRECCION_IP]</code>", parse_mode="HTML")
+
+        target_ip = args[1]
+        msg_wait = bot.reply_to(message, "📡 <code>RASTREANDO PAQUETES...</code>", parse_mode="HTML")
+        
+        # Ejecutamos el escaneo
+        result = ProxyChecker.check_ip(target_ip)
+
+        if result:
+            output = Visuals.format_table(f"IP SCAN: {target_ip}", result)
+            bot.edit_message_text(output, message.chat.id, msg_wait.message_id, parse_mode="HTML")
+        else:
+            bot.edit_message_text("❌ Error: No se pudo obtener información de esa IP.", message.chat.id, msg_wait.message_id)
+
+    except Exception as e:
+        bot.reply_to(message, f"🚨 <b>DEBUG:</b> <code>{str(e)}</code>", parse_mode="HTML")
+
 from extrapolator_engine import Extrapolator
 
 # -----------------------------------------------------------------

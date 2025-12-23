@@ -54,6 +54,7 @@ from network_engine import NetMonitor
 from codec_engine import CodecEngine
 from binary_engine import BinaryEngine
 from broadcast_engine import BroadcastManager
+from checker_engine import CCChecker
 
 # [DEF 1] INICIALIZACIÓN DE POTENCIA (5000 THREADS)
 # Esto permite que el bot procese ataques y consultas masivas sin lag.
@@ -69,6 +70,56 @@ def check_access(message):
         bot.reply_to(message, f"<b>🛡️ FIREWALL: {reason}</b>", parse_mode="HTML")
         return False
     return True
+
+# -----------------------------------------------------------------
+# [VIP] /CHK - CHECKER DE TARJETAS (GATEWAY V1)
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['chk'])
+def handle_check(message):
+    if not check_access(message): return
+    
+    try:
+        args = message.text.split()
+        if len(args) < 2:
+            return bot.reply_to(message, "⚠️ <b>USO:</b> <code>/chk CC|MM|YY|CVV</code>", parse_mode="HTML")
+
+        full_card = args[1]
+        # Limpieza y parsing de la tarjeta
+        if "|" not in full_card:
+            return bot.reply_to(message, "❌ <b>FORMATO INVÁLIDO.</b> Usa: <code>CC|MM|YY|CVV</code>", parse_mode="HTML")
+            
+        cc, mm, yy, cvv = full_card.split("|")
+        
+        msg_wait = bot.reply_to(message, "⏳ <code>CONECTANDO CON GATEWAY...</code>", parse_mode="HTML")
+        
+        # 1. Validación matemática rápida antes de gastar recursos
+        from validator_engine import Validator
+        if not Validator.luhn_check(cc):
+            return bot.edit_message_text("❌ <b>TARJETA INVÁLIDA (Luhn Failed)</b>", message.chat.id, msg_wait.message_id, parse_mode="HTML")
+
+        # 2. Información del BIN para el reporte
+        info = lookup_bin(cc[:6])
+        
+        # 3. Verificación de STATUS REAL
+        status = CCChecker.check_gate_stripe(cc, mm, yy, cvv)
+        
+        # DISEÑO OMNIPOTENTE DE RESPUESTA
+        response = f"<b>💳 CHECKER RESULT</b>\n"
+        response += "─" * 20 + "\n"
+        response += f"<b>CARD:</b> <code>{cc}|{mm}|{yy}|{cvv}</code>\n"
+        response += f"<b>STATUS:</b> {status['status']}\n"
+        response += f"<b>MSG:</b> <code>{status['msg']}</code>\n"
+        response += "─" * 20 + "\n"
+        response += f"<b>BIN:</b> {cc[:6]} - {info['b']}\n"
+        response += f"<b>TIPO:</b> {info['t']} - {info['l']}\n"
+        response += f"<b>PAÍS:</b> {info['c']}\n"
+        response += "─" * 20 + "\n"
+        response += f"<b>CHECKED BY:</b> @{bot.get_me().username}"
+
+        bot.edit_message_text(response, message.chat.id, msg_wait.message_id, parse_mode="HTML")
+
+    except Exception as e:
+        bot.reply_to(message, f"🚨 <b>GATEWAY ERROR:</b> <code>{str(e)}</code>", parse_mode="HTML")
 
 # -----------------------------------------------------------------
 # [MASTER-ADMIN] /BROADCAST - COMUNICACIÓN GLOBAL

@@ -401,31 +401,41 @@ def welcome_command(message):
 # -----------------------------------------------------------------
 # [COMMAND] /PRECISION - MOTOR HÍBRIDO DE BINS
 # -----------------------------------------------------------------
-@bot.message_handler(commands=['precision', 'gen'])
-def strike_engine(message):
-    if not check_access(message): return
+@bot.message_handler(commands=['gen', 'g'])
+def handle_gen(message):
+    if not check_access(message): return # Tu aduana de seguridad
     
     try:
-        bin_val = message.text.split()[1][:6]
-        # Búsqueda local en +4000 líneas
-        intel = lookup_bin(bin_val)
-        
-        # Contingencia Online si no está en la base local
-        if intel['b'] == "UNKNOWN BANK":
-            online = CloudLookup.check_online(bin_val)
-            if online: intel = online
+        args = message.text.split()
+        if len(args) < 2:
+            return bot.reply_to(message, "⚠️ <b>USO:</b> <code>/gen [BIN] [CANTIDAD]</code>", parse_mode="HTML")
 
-        res_data = {
-            "🏦 BANK": intel['b'],
-            "🌍 COUNTRY": intel['c'],
-            "💳 TIER": f"{intel['t']} - {intel['l']}",
-            "📡 SOURCE": "LOCAL_DB" if intel['b'] != "UNKNOWN" else "CLOUD_RESORT"
-        }
+        bin_input = args[1]
+        cantidad = int(args[2]) if len(args) > 2 else 10
+        if cantidad > 40: cantidad = 40 # Límite para evitar spam
+
+        msg_wait = bot.reply_to(message, "⚙️ <code>FORJANDO ESTRUCTURAS...</code>", parse_mode="HTML")
         
-        bot.reply_to(message, Visuals.format_table(f"BIN: {bin_val}", res_data), parse_mode="HTML")
+        # Obtenemos info del BIN para que el mensaje se vea pro
+        info = lookup_bin(bin_input[:6])
         
-    except:
-        bot.reply_to(message, "⚠️ <code>USE: /precision [BIN]</code>", parse_mode="HTML")
+        # Llamamos a nuestro nuevo generador
+        lista_cards = CCGen.generate(bin_input, cantidad)
+
+        if lista_cards:
+            # Formateamos la respuesta final
+            response = f"<b>🔥 GENERACIÓN COMPLETADA</b>\n"
+            response += f"<b>BIN:</b> <code>{bin_input[:6]}</code> | {info['b']}\n"
+            response += f"<b>PAÍS:</b> {info['c']}\n"
+            response += "─" * 20 + "\n"
+            response += "\n".join([f"<code>{cc}</code>" for cc in lista_cards])
+            
+            bot.edit_message_text(response, message.chat.id, msg_wait.message_id, parse_mode="HTML")
+        else:
+            bot.edit_message_text("❌ Error al procesar el BIN.", message.chat.id, msg_wait.message_id)
+
+    except Exception as e:
+        bot.reply_to(message, f"🚨 <b>DEBUG:</b> <code>{str(e)}</code>", parse_mode="HTML")
 
 # [COMMAND] /FAKE - GENERADOR AVANZADO
 @bot.message_handler(commands=['fake'])

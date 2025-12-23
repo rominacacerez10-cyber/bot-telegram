@@ -347,40 +347,39 @@ def strike_engine(message):
     except:
         bot.reply_to(message, "⚠️ <code>USE: /precision [BIN]</code>", parse_mode="HTML")
 
-# -----------------------------------------------------------------
-# [COMMAND] /FAKE - GENERADOR AVANZADO DE IDENTIDADES
-# -----------------------------------------------------------------
+# [COMMAND] /FAKE - GENERADOR AVANZADO
 @bot.message_handler(commands=['fake'])
 def fake_identity_command(message):
     if not check_access(message): return
 
     try:
-        country_code = "US" # Default a Estados Unidos
+        # 1. Obtener código de país
         args = message.text.split()
-        if len(args) > 1:
-            country_code = args[1].upper() # Permite /fake ES, /fake MX, etc.
+        country_code = args[1].upper() if len(args) > 1 else "US"
+        
+        bot.send_message(message.chat.id, "🛰️ <code>GENERANDO IDENTIDAD...</code>", parse_mode="HTML")
 
-        bot.send_message(message.chat.id, "⏱️ <code>GENERANDO IDENTIDAD...</code>", parse_mode="HTML")
-
+        # 2. Llamada al generador (Asegúrate de que FakeID esté importado arriba)
         fake_data = FakeID.generate(country_code)
 
         if fake_data:
-            photo_url = fake_data.pop("PHOTO_URL") # Extrae la URL de la foto
+            # Extraemos la foto y preparamos los datos para la tabla
+            photo_url = fake_data.pop("PHOTO_URL", None)
+            
+            # Formateamos la tabla usando tu Visual Engine
+            output = Visuals.format_table(f"FIDE ID: {country_code}", fake_data)
 
-            # Formatear los datos para la tabla Cyber
-            table_data = {k: v for k, v in fake_data.items() if k != "PHOTO_URL"}
-            output = Visuals.format_table(f"FAKE ID: {country_code}", table_data)
-
-            # Enviar la foto y luego la tabla Cyber
-            bot.send_photo(message.chat.id, photo_url, caption=output, parse_mode="HTML")
+            if photo_url:
+                bot.send_photo(message.chat.id, photo_url, caption=output, parse_mode="HTML")
+            else:
+                bot.send_message(message.chat.id, output, parse_mode="HTML")
         else:
-            bot.reply_to(message, "⚠️ <code>ERROR: No se pudo generar identidad. Intente de nuevo.</code>", parse_mode="HTML")
+            bot.reply_to(message, "❌ <b>ERROR:</b> El generador devolvió datos vacíos.")
+
     except Exception as e:
-        bot.reply_to(message, f"⚠️ <code>ERROR: Uso /fake [PAIS, ej: US, ES, MX]</code>", parse_mode="HTML")
+        # ESTO NOS DIRÁ EL ERROR REAL EN TELEGRAM
+        bot.reply_to(message, f"🚨 <b>DEBUG ERROR:</b> <code>{str(e)}</code>", parse_mode="HTML")
         print(f"Error en /fake: {e}")
-
-# ... (el resto de tus comandos y el bloque if __name__ == "__main__": al final)
-
 # -----------------------------------------------------------------
 # [ADMIN] /PANEL - CONTROL TOTAL DE INFRAESTRUCTURA
 # -----------------------------------------------------------------

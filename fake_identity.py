@@ -1,42 +1,32 @@
-# =================================================================
-# PROJECT: CJKILLER OMNIPOTENT
-# MODULE: fake_identity.py (GENERADOR DE IDENTIDADES)
-# =================================================================
-
-import requests
+import random
 
 class FakeID:
     @staticmethod
     def generate(country_code="US"):
-        """Genera una identidad falsa completa con imagen y datos."""
+        """Generador de Identidades Nivel Extremo"""
         try:
-            # Puedes cambiar 'randomuser.me' por otra API si lo deseas.
-            # 'nat' (nationality) asegura que la identidad sea de un país específico.
-            response = requests.get(f"https://randomuser.me/api/?nat={country_code}&inc=name,location,email,login,phone,picture&noinfo", timeout=5)
-            if response.status_code == 200:
-                data = response.json()['results'][0]
-                
-                # Formato de nombre
-                name = f"{data['name']['first']} {data['name']['last']}".upper()
-                
-                # Dirección completa
-                location = data['location']
-                address = f"{location['street']['name']} {location['street']['number']}, {location['city']}, {location['state']}, {location['postcode']}".upper()
-                
-                # Datos de cuenta
-                username = data['login']['username']
-                password = data['login']['password'] # ¡Precaución al usar contraseñas generadas!
-                
-                return {
-                    "FULL NAME": name,
-                    "ADDRESS": address,
-                    "EMAIL": data['email'].upper(),
-                    "PHONE": data['phone'],
-                    "USERNAME": username,
-                    "PASSWORD": password,
-                    "PHOTO_URL": data['picture']['large']
-                }
+            # Diccionarios de datos para asegurar que siempre haya contenido
+            nombres = ["James", "Robert", "John", "Michael", "David", "Mary", "Patricia", "Jennifer", "Linda"]
+            apellidos = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis"]
+            ciudades = ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia"]
+            calles = ["Maple St", "Oak St", "Washington Blvd", "Lakeview Dr", "Park Ave"]
+
+            # Construcción del objeto de datos
+            data = {
+                "NOMBRE": random.choice(nombres),
+                "APELLIDO": random.choice(apellidos),
+                "EDAD": str(random.randint(19, 75)),
+                "GENERO": random.choice(["Masculino", "Femenino"]),
+                "CIUDAD": random.choice(ciudades),
+                "DIRECCION": f"{random.randint(100, 9999)} {random.choice(calles)}",
+                "ZIP_CODE": str(random.randint(10000, 99999)),
+                "S_SOCIAL": f"{random.randint(100, 999)}-{random.randint(10, 99)}-{random.randint(1000, 9999)}",
+                "PHOTO_URL": "https://p16-va.lemon8cdn.com/tos-alisg-v-a3e477-sg/o0A6fIBfC9eAf9EBI7AInL2An9fDeA7D2AAnQA~tplv-tej9nj120t-origin.webp"
+            }
+            
+            return data
+
         except Exception as e:
-            print(f"Error generando identidad: {e}")
+            # Si algo falla internamente, enviamos un log al terminal de Render
+            print(f"Error interno en generador: {e}")
             return None
-        return None

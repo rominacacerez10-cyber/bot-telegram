@@ -66,6 +66,43 @@ def check_access(message):
     return True
 
 # -----------------------------------------------------------------
+# [VIP] /AUDIT - ANÁLISIS PROFUNDO DE BIN
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['audit'])
+def handle_audit(message):
+    if not check_access(message): return
+    
+    try:
+        args = message.text.split()
+        if len(args) < 2:
+            return bot.reply_to(message, "⚠️ <b>USO:</b> <code>/audit [BIN]</code>", parse_mode="HTML")
+            
+        bin_val = args[1][:6]
+        msg_wait = bot.reply_to(message, "🧠 <code>EJECUTANDO ANÁLISIS HEURÍSTICO...</code>", parse_mode="HTML")
+        
+        # 1. Obtenemos la info base
+        from database_world import lookup_bin
+        info = lookup_bin(bin_val)
+        
+        # 2. Auditamos el BIN
+        audit = BinAnalyzer.get_score(info)
+        
+        # Combinamos resultados
+        final_results = {
+            "BANK": info['b'],
+            "LEVEL": info['l'],
+            "TYPE": info['t'],
+            "POWER": audit['SCORE'],
+            "ADVICE": audit['ADVICE']
+        }
+        
+        output = Visuals.format_table(f"BIN AUDIT: {bin_val}", final_results)
+        bot.edit_message_text(output, message.chat.id, msg_wait.message_id, parse_mode="HTML")
+
+    except Exception as e:
+        bot.reply_to(message, f"🚨 <b>ERROR ANALÍTICO:</b> <code>{str(e)}</code>", parse_mode="HTML")
+
+# -----------------------------------------------------------------
 # [VIP] /ID - CREADOR DE CREDENCIALES VISUALES
 # -----------------------------------------------------------------
 @bot.message_handler(commands=['id'])

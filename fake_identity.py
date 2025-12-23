@@ -21,7 +21,7 @@ class FakeID:
                 "DIRECCION": f"{random.randint(100, 9999)} {random.choice(calles)}",
                 "ZIP_CODE": str(random.randint(10000, 99999)),
                 "S_SOCIAL": f"{random.randint(100, 999)}-{random.randint(10, 99)}-{random.randint(1000, 9999)}",
-                "PHOTO_URL": "https://p16-va.lemon8cdn.com/tos-alisg-v-a3e477-sg/o0A6fIBfC9eAf9EBI7AInL2An9fDeA7D2AAnQA~tplv-tej9nj120t-origin.webp"
+                "PHOTO_URL": "https://randomuser.me/api/portraits/men/1.jpg"
             }
             
             return data

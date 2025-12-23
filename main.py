@@ -61,6 +61,43 @@ def check_access(message):
     return True
 
 # -----------------------------------------------------------------
+# [VIP] /CHECK - VALIDACIÓN EXTREMA DE TARJETAS
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['check', 'chk'])
+def check_card_command(message):
+    if not check_access(message): return
+    
+    try:
+        full_card = message.text.split()[1]
+        bin_val = full_card[:6]
+        
+        msg_wait = bot.reply_to(message, "🔍 <code>ANALIZANDO ESTRUCTURA...</code>", parse_mode="HTML")
+        
+        # 1. Validación Matemática
+        is_valid = Validator.luhn_check(full_card)
+        luhn_status = "VÁLIDA ✅" if is_valid else "INVÁLIDA ❌"
+        
+        # 2. Búsqueda de Info (Usando tu database_world mejorada)
+        info = lookup_bin(bin_val)
+        
+        results = {
+            "CARD": f"{full_card[:6]}xxxxxx{full_card[-4:]}",
+            "LUHN": luhn_status,
+            "BANK": info['b'],
+            "COUNTRY": info['c'],
+            "LEVEL": info['l'],
+            "SOURCE": info['SOURCE']
+        }
+        
+        output = Visuals.format_table("CC VALIDATOR", results)
+        bot.edit_message_text(output, message.chat.id, msg_wait.message_id, parse_mode="HTML")
+        
+    except IndexError:
+        bot.reply_to(message, "⚠️ <code>USO: /check [NUMERO_TARJETA]</code>", parse_mode="HTML")
+    except Exception as e:
+        bot.reply_to(message, f"🚨 <b>ERROR:</b> <code>{str(e)}</code>", parse_mode="HTML")
+
+# -----------------------------------------------------------------
 # [ADMIN] /GATE - CIERRE PERIMETRAL DE EMERGENCIA
 # -----------------------------------------------------------------
 @bot.message_handler(commands=['gate', 'lock'])

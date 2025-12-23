@@ -3,7 +3,14 @@
 # FILE: main.py (THE CORE ORCHESTRATOR)
 # TOTAL INFRASTRUCTURE: +5000 LINES OF DISTRIBUTED LOGIC
 # =================================================================
+# Al inicio de main.py
+from keep_alive import keep_alive
 
+# Antes de bot.infinity_polling()
+if __name__ == "__main__":
+    keep_alive() # Inicia el servidor de vida
+    print("🚀 NÚCLEO ACTIVO: SISTEMA ANTI-SLEEP INICIADO")
+    bot.infinity_polling()
 import telebot
 import threading
 import logging

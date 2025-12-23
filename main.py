@@ -8,6 +8,22 @@ import telebot
 import time
 import threading
 from datetime import datetime
+from gate_control import GateKeeper
+from security_firewall import firewall
+
+def check_access(message):
+    # Revisa si el usuario está baneado o hace spam
+    allowed, reason = firewall.validate_message(message.from_user.id, message.text)
+    if not allowed:
+        bot.reply_to(message, reason)
+        return False
+    
+    # Revisa si tú (Admin) cerraste el bot para mantenimiento
+    if not GateKeeper.check_gate(message.from_user.id, ADMIN_ID):
+        bot.reply_to(message, GateKeeper.maintenance_msg, parse_mode="HTML")
+        return False
+        
+    return True
 
 # --- IMPORTACIÓN DE MÓDULOS DE ÉLITE ---
 from config import TOKEN, ADMIN_ID, LOG_CHANNEL

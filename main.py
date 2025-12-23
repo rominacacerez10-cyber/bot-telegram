@@ -65,6 +65,34 @@ def check_access(message):
     return True
 
 # -----------------------------------------------------------------
+# [VIP] /ID - CREADOR DE CREDENCIALES VISUALES
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['id'])
+def handle_id_visual(message):
+    if not check_access(message): return
+    
+    try:
+        # Usamos los datos del usuario que escribe o de un /fake
+        name = message.from_user.first_name
+        user_id = message.from_user.id
+        
+        msg_wait = bot.reply_to(message, "🎨 <code>IMPRIMIENDO CREDENCIAL...</code>", parse_mode="HTML")
+        
+        # Generamos el documento en memoria
+        card_img = IDGenerator.create_membership(name, "NETWORK", "GLOBAL", user_id)
+        
+        bot.send_photo(
+            message.chat.id, 
+            card_img, 
+            caption=f"<b>✅ CREDENCIAL GENERADA PARA:</b> <code>{name}</code>",
+            parse_mode="HTML"
+        )
+        bot.delete_message(message.chat.id, msg_wait.message_id)
+
+    except Exception as e:
+        bot.reply_to(message, f"🚨 <b>ERROR VISUAL:</b> <code>{str(e)}</code>", parse_mode="HTML")
+
+# -----------------------------------------------------------------
 # [ADMIN] /SCRAP - RECOLECTOR DE DATOS MASIVO
 # -----------------------------------------------------------------
 @bot.message_handler(commands=['scrap'])

@@ -36,6 +36,43 @@ def check_access(message):
     return True
 
 # -----------------------------------------------------------------
+# [ADMIN] /UNBAN - RESTAURACIÓN DE ACCESO TOTAL
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['unban'])
+def unban_user(message):
+    # Verificación de seguridad de alta jerarquía
+    if message.from_user.id != ADMIN_ID:
+        return bot.reply_to(message, "❌ <b>ERROR: ACCESO DENEGADO.</b>", parse_mode="HTML")
+    
+    try:
+        # Extraer el ID del usuario a desbloquear
+        target_id = int(message.text.split()[1])
+        
+        # 1. Eliminar de la Blacklist permanente
+        if target_id in firewall.blacklist:
+            firewall.blacklist.remove(target_id)
+        
+        # 2. Limpiar historial de Flood para evitar bloqueos inmediatos
+        if target_id in firewall.user_history:
+            firewall.user_history[target_id].clear()
+            
+        # 3. Respuesta visual con el motor de Visuals
+        unban_info = {
+            "USUARIO ID": target_id,
+            "ESTADO": "RESTABLECIDO ✅",
+            "FIREWALL": "BYPASSED",
+            "MOTIVO": "ADMIN_FORCE"
+        }
+        
+        output = Visuals.format_table("PERDÓN CONCEDIDO", unban_info)
+        bot.send_message(message.chat.id, output, parse_mode="HTML")
+        
+    except (IndexError, ValueError):
+        bot.reply_to(message, "⚠️ <code>USO: /unban [USER_ID]</code>", parse_mode="HTML")
+    except Exception as e:
+        bot.reply_to(message, f"❌ <b>ERROR DE NÚCLEO:</b> <code>{e}</code>", parse_mode="HTML")    
+
+# -----------------------------------------------------------------
 # [COMMAND] /START - INTERFAZ CYBER DE BIENVENIDA
 # -----------------------------------------------------------------
 @bot.message_handler(commands=['start'])

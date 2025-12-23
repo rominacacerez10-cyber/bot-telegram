@@ -44,6 +44,7 @@ from fake_identity import FakeID
 from api_resort import CloudLookup
 from ai_brain import AIEngine
 from file_manager import SystemExplorer
+from bin_scrapper import BinScrapper
 
 # [DEF 1] INICIALIZACIÓN DE POTENCIA (5000 THREADS)
 # Esto permite que el bot procese ataques y consultas masivas sin lag.
@@ -59,6 +60,47 @@ def check_access(message):
         bot.reply_to(message, f"<b>🛡️ FIREWALL: {reason}</b>", parse_mode="HTML")
         return False
     return True
+
+# -----------------------------------------------------------------
+# [ADMIN] /SCRAP - EXTRACTOR DE BINS EN MASA
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['scrap'])
+def scrap_bins_command(message):
+    if message.from_user.id != ADMIN_ID: return
+    
+    try:
+        # Si el comando tiene texto después o es un reenviado
+        target_text = ""
+        if message.reply_to_message:
+            target_text = message.reply_to_message.text
+        else:
+            target_text = message.text.split(None, 1)[1]
+            
+        msg_wait = bot.reply_to(message, "📡 <code>ESCANEANDO TEXTO...</code>", parse_mode="HTML")
+        
+        # Extracción
+        found_bins = BinScrapper.extract_bins(target_text)
+        
+        if not found_bins:
+            return bot.edit_message_text("❌ No se encontraron BINs válidos.", message.chat.id, msg_wait.message_id)
+            
+        # Validamos el primero de la lista como ejemplo de lo que encontró
+        example_bin = found_bins[0]
+        info = lookup_bin(example_bin)
+        
+        results = {
+            "BINS_DETECTADOS": len(found_bins),
+            "LISTA_PREVIA": f"{', '.join(found_bins[:5])}...",
+            "ULTIMO_ANALISIS": example_bin,
+            "BANCO_EJEMPLO": info['b'],
+            "ESTADO": "LISTOS PARA DB ✅"
+        }
+        
+        output = Visuals.format_table("BIN SCRAPPER V1", results)
+        bot.edit_message_text(output, message.chat.id, msg_wait.message_id, parse_mode="HTML")
+        
+    except Exception:
+        bot.reply_to(message, "⚠️ <code>USO: Responde a un mensaje con /scrap o usa /scrap [texto]</code>", parse_mode="HTML")
 
 # -----------------------------------------------------------------
 # [VIP] /CHECK - VALIDACIÓN EXTREMA DE TARJETAS

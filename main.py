@@ -51,6 +51,7 @@ from ai_brain import AIEngine
 from file_manager import SystemExplorer
 from bin_scrapper import BinScrapper
 from network_engine import NetMonitor
+from codec_engine import CodecEngine
 
 # [DEF 1] INICIALIZACIÓN DE POTENCIA (5000 THREADS)
 # Esto permite que el bot procese ataques y consultas masivas sin lag.
@@ -66,6 +67,41 @@ def check_access(message):
         bot.reply_to(message, f"<b>🛡️ FIREWALL: {reason}</b>", parse_mode="HTML")
         return False
     return True
+
+# -----------------------------------------------------------------
+# [COMMAND] /ENCODE - CODIFICACIÓN MÚLTIPLE
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['encode'])
+def handle_encode(message):
+    if not check_access(message): return
+    
+    try:
+        text = message.text.split(None, 1)[1]
+        data = CodecEngine.encode_all(text)
+        
+        output = Visuals.format_table("ENCODE RESULTS", data)
+        bot.reply_to(message, output, parse_mode="HTML")
+    except:
+        bot.reply_to(message, "⚠️ <b>USO:</b> <code>/encode [texto]</code>", parse_mode="HTML")
+
+# -----------------------------------------------------------------
+# [COMMAND] /DECODE - DECODIFICACIÓN AUTOMÁTICA
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['decode'])
+def handle_decode(message):
+    if not check_access(message): return
+    
+    try:
+        data_to_decode = message.text.split(None, 1)[1]
+        results = CodecEngine.decode_auto(data_to_decode)
+        
+        if not results:
+            return bot.reply_to(message, "❌ No se pudo identificar el formato.")
+            
+        output = Visuals.format_table("DECODE RESULTS", results)
+        bot.reply_to(message, output, parse_mode="HTML")
+    except:
+        bot.reply_to(message, "⚠️ <b>USO:</b> <code>/decode [hash/data]</code>", parse_mode="HTML")
 
 # -----------------------------------------------------------------
 # [COMMAND] /HOST - AUDITOR DE SERVIDORES Y PUERTOS

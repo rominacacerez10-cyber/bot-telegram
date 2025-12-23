@@ -1,130 +1,153 @@
 # =================================================================
-# PROJECT: CJKILLER OMNIPOTENT ARCHITECT
-# FILE: main.py (THE CORE ORCHESTRATOR)
-# TOTAL INFRASTRUCTURE: +5000 LINES OF DISTRIBUTED LOGIC
+# PROJECT: CJKILLER OMNIPOTENT ARCHITECT v35.0
+# TOTAL INFRASTRUCTURE: +5000 DISTRIBUTED LINES
+# STATUS: EXTREME POWER ACTIVE
 # =================================================================
-# Al inicio de main.py
-from keep_alive import keep_alive
 
-# Antes de bot.infinity_polling()
-if __name__ == "__main__":
-    keep_alive() # Inicia el servidor de vida
-    print("🚀 NÚCLEO ACTIVO: SISTEMA ANTI-SLEEP INICIADO")
-    bot.infinity_polling()
 import telebot
+import time
 import threading
-import logging
 from datetime import datetime
 
-# Importación de Módulos de Élite (Asegúrate de tener estos archivos en GitHub)
+# --- IMPORTACIÓN DE MÓDULOS DE ÉLITE ---
 from config import TOKEN, ADMIN_ID, LOG_CHANNEL
-from database_world import lookup_bin
-from security_firewall import firewall
 from visual_engine import Visuals
-from economy_system import Economy
-from support_tickets import TicketSystem
-from server_monitor import Monitor
-from admin_dashboard import AdminDashboard
+from security_firewall import firewall
+from database_world import lookup_bin
 from api_resort import CloudLookup
+from economy_system import Economy
+from server_monitor import Monitor
+from keep_alive import keep_alive
+from fake_identity import FakeID
 
-# Configuración de Potencia Extrema
-# 5000 hilos permiten procesar miles de peticiones simultáneas sin lag.
+# [DEF 1] INICIALIZACIÓN DE POTENCIA (5000 THREADS)
+# Esto permite que el bot procese ataques y consultas masivas sin lag.
 bot = telebot.TeleBot(TOKEN, threaded=True, num_threads=5000)
 
-# Inicialización de Sistemas
-tickets = TicketSystem()
-logger = logging.getLogger("CJK_CORE")
-
 # -----------------------------------------------------------------
-# [1] MIDDLEWARE DE SEGURIDAD (FIREWALL)
+# [MIDDLEWARE] FIREWALL DE CAPA 7
 # -----------------------------------------------------------------
-def security_check(message):
+def check_access(message):
     uid = message.from_user.id
-    text = message.text or ""
-    is_safe, reason = firewall.validate_message(uid, text)
+    is_safe, reason = firewall.validate_message(uid, message.text or "")
     if not is_safe:
-        bot.reply_to(message, f"<b>{reason}</b>", parse_mode="HTML")
+        bot.reply_to(message, f"<b>🛡️ FIREWALL: {reason}</b>", parse_mode="HTML")
         return False
     return True
 
 # -----------------------------------------------------------------
-# [2] HANDLERS DE COMANDOS PÚBLICOS
+# [COMMAND] /START - INTERFAZ CYBER DE BIENVENIDA
 # -----------------------------------------------------------------
 @bot.message_handler(commands=['start'])
-def welcome(message):
-    if not security_check(message): return
+def welcome_command(message):
+    if not check_access(message): return
     
-    welcome_text = (
-        f"{Visuals.get_header()}\n\n"
-        f"<i>Bienvenido al Sistema Operativo Omnipotent.</i>\n"
-        f"Usa los botones o comandos para operar."
-    )
-    # Aquí puedes añadir el markup del menú principal
-    bot.send_message(message.chat.id, welcome_text, parse_mode="HTML")
+    # Renderizado de Tabla de Usuario
+    user_data = {
+        "USER": f"@{message.from_user.username}",
+        "ID": message.from_user.id,
+        "RANK": "ADMIN" if message.from_user.id == ADMIN_ID else "USER",
+        "STATUS": "ACTIVE ✅"
+    }
+    
+    output = Visuals.format_table("ACCESS GRANTED", user_data)
+    bot.send_message(message.chat.id, output, parse_mode="HTML")
 
+# -----------------------------------------------------------------
+# [COMMAND] /PRECISION - MOTOR HÍBRIDO DE BINS
+# -----------------------------------------------------------------
 @bot.message_handler(commands=['precision', 'gen'])
 def strike_engine(message):
-    if not security_check(message): return
+    if not check_access(message): return
     
     try:
         bin_val = message.text.split()[1][:6]
-        # 1. Búsqueda Híbrida (Local + Cloud)
+        # Búsqueda local en +4000 líneas
         intel = lookup_bin(bin_val)
+        
+        # Contingencia Online si no está en la base local
         if intel['b'] == "UNKNOWN BANK":
             online = CloudLookup.check_online(bin_val)
             if online: intel = online
-            
-        # 2. Renderizado Cyber-Estético
-        data_to_show = {
+
+        res_data = {
             "🏦 BANK": intel['b'],
             "🌍 COUNTRY": intel['c'],
-            "💳 TYPE": f"{intel['t']} | {intel['l']}"
+            "💳 TIER": f"{intel['t']} - {intel['l']}",
+            "📡 SOURCE": "LOCAL_DB" if intel['b'] != "UNKNOWN" else "CLOUD_RESORT"
         }
-        output = Visuals.format_table(f"STRIKE: {bin_val}", data_to_show)
-        bot.reply_to(message, output, parse_mode="HTML")
         
-    except Exception as e:
-        bot.reply_to(message, "⚠️ <b>ERROR:</b> Formato: <code>/precision 489504</code>", parse_mode="HTML")
+        bot.reply_to(message, Visuals.format_table(f"BIN: {bin_val}", res_data), parse_mode="HTML")
+        
+    except:
+        bot.reply_to(message, "⚠️ <code>USE: /precision [BIN]</code>", parse_mode="HTML")
 
 # -----------------------------------------------------------------
-# [3] CENTRO DE MANDO (PANEL DE ADMIN)
+# [COMMAND] /FAKE - GENERADOR AVANZADO DE IDENTIDADES
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['fake'])
+def fake_identity_command(message):
+    if not check_access(message): return
+
+    try:
+        country_code = "US" # Default a Estados Unidos
+        args = message.text.split()
+        if len(args) > 1:
+            country_code = args[1].upper() # Permite /fake ES, /fake MX, etc.
+
+        bot.send_message(message.chat.id, "⏱️ <code>GENERANDO IDENTIDAD...</code>", parse_mode="HTML")
+
+        fake_data = FakeID.generate(country_code)
+
+        if fake_data:
+            photo_url = fake_data.pop("PHOTO_URL") # Extrae la URL de la foto
+
+            # Formatear los datos para la tabla Cyber
+            table_data = {k: v for k, v in fake_data.items() if k != "PHOTO_URL"}
+            output = Visuals.format_table(f"FAKE ID: {country_code}", table_data)
+
+            # Enviar la foto y luego la tabla Cyber
+            bot.send_photo(message.chat.id, photo_url, caption=output, parse_mode="HTML")
+        else:
+            bot.reply_to(message, "⚠️ <code>ERROR: No se pudo generar identidad. Intente de nuevo.</code>", parse_mode="HTML")
+    except Exception as e:
+        bot.reply_to(message, f"⚠️ <code>ERROR: Uso /fake [PAIS, ej: US, ES, MX]</code>", parse_mode="HTML")
+        print(f"Error en /fake: {e}")
+
+# ... (el resto de tus comandos y el bloque if __name__ == "__main__": al final)
+
+# -----------------------------------------------------------------
+# [ADMIN] /PANEL - CONTROL TOTAL DE INFRAESTRUCTURA
 # -----------------------------------------------------------------
 @bot.message_handler(commands=['panel', 'admin'])
-def admin_portal(message):
+def master_panel(message):
     if message.from_user.id != ADMIN_ID: return
     
-    bot.send_message(
-        message.chat.id, 
-        "👑 <b>CENTRO DE MANDO OMNIPOTENT</b>\nSeleccione operación maestra:",
-        reply_markup=AdminDashboard.main_menu(),
-        parse_mode="HTML"
+    stats = Monitor.get_stats() # Obtiene CPU/RAM en tiempo real
+    panel_text = (
+        f"{Visuals.get_header()}\n"
+        f"👑 <b>CENTRO DE MANDO OMNIPOTENT</b>\n\n"
+        f"🖥️ <b>SISTEMA:</b>\n"
+        f"└ CPU: {stats['cpu']}% | RAM: {stats['ram']}%\n"
+        f"└ UPTIME: {stats['uptime']}\n\n"
+        f"⚙️ <b>MODULOS ACTIVOS:</b>\n"
+        f"└ Firewall L7, Economy v2, Hybrid Search"
     )
+    # Aquí irían los botones Inline de admin_dashboard.py
+    bot.send_message(message.chat.id, panel_text, parse_mode="HTML")
 
 # -----------------------------------------------------------------
-# [4] LÓGICA DE TEMAS Y BOTONES (CALLBACKS)
-# -----------------------------------------------------------------
-@bot.callback_query_handler(func=lambda call: True)
-def handle_callbacks(call):
-    uid = call.from_user.id
-    
-    # Cambio de Temas Visuales
-    if call.data.startswith('theme_'):
-        new_theme = call.data.split('_')[1].upper()
-        Visuals.CURRENT_THEME = new_theme
-        bot.edit_message_text(f"🎨 <b>TEMA ACTUALIZADO:</b> {new_theme}", 
-                             call.message.chat.id, call.message.message_id, parse_mode="HTML")
-        
-    # Gestión de Keys (Admin)
-    elif call.data == "adm_gen_key" and uid == ADMIN_ID:
-        key = Economy.generate_key()
-        bot.send_message(ADMIN_ID, f"🔑 <b>KEY GENERADA:</b> <code>{key}</code>", parse_mode="HTML")
-
-# -----------------------------------------------------------------
-# [5] MONITORIZACIÓN Y ARRANQUE
+# [EXECUTION] EL MOTOR DE ARRANQUE (AL FINAL)
 # -----------------------------------------------------------------
 if __name__ == "__main__":
-    print(f"🚀 CJKILLER OMNIPOTENT v35.0 ACTIVO")
-    print(f"📊 MONITOR: {Monitor.get_stats()}")
+    # Inicia el servidor web para Render (Anti-Sleep)
+    keep_alive() 
+    print(f"🚀 {datetime.now()} | CJKILLER OMNIPOTENT v35.0 ACTIVO")
     
-    # Loop de vida infinita con auto-reconexión
-    bot.infinity_polling(timeout=60, long_polling_timeout=30)
+    # Bucle infinito con auto-reconexión ante errores de red
+    while True:
+        try:
+            bot.infinity_polling(timeout=60, long_polling_timeout=30)
+        except Exception as e:
+            print(f"⚠️ RECONECTANDO... ERROR: {e}")
+            time.sleep(5)

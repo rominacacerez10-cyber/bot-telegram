@@ -15,6 +15,7 @@ from security_firewall import firewall
 from datetime import datetime
 from fake_identity import FakeID
 from generator_engine import CCGen
+from proxy_checker import ProxyChecker
 bot = telebot.TeleBot(TOKEN)
 
 # --- CAPA DE SEGURIDAD (EL ESCUDO) ---

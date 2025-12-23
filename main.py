@@ -5,20 +5,25 @@
 # =================================================================
 
 import telebot
+import telebot
 import time
-import threading
-from datetime import datetime
-from gate_control import GateKeeper
+from config import TOKEN, ADMIN_ID
+from visual_engine import Visuals
+from database_world import Database
+from gate_control import GateKeeper  # <-- Esta es la pieza que te falta
 from security_firewall import firewall
 
+bot = telebot.TeleBot(TOKEN)
+
+# --- CAPA DE SEGURIDAD (EL ESCUDO) ---
 def check_access(message):
-    # Revisa si el usuario está baneado o hace spam
+    # Revisa baneos y spam
     allowed, reason = firewall.validate_message(message.from_user.id, message.text)
     if not allowed:
         bot.reply_to(message, reason)
         return False
     
-    # Revisa si tú (Admin) cerraste el bot para mantenimiento
+    # Revisa si el bot está en mantenimiento
     if not GateKeeper.check_gate(message.from_user.id, ADMIN_ID):
         bot.reply_to(message, GateKeeper.maintenance_msg, parse_mode="HTML")
         return False

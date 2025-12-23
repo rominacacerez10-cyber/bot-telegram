@@ -353,33 +353,30 @@ def fake_identity_command(message):
     if not check_access(message): return
 
     try:
-        # 1. Obtener código de país
         args = message.text.split()
         country_code = args[1].upper() if len(args) > 1 else "US"
         
-        bot.send_message(message.chat.id, "🛰️ <code>GENERANDO IDENTIDAD...</code>", parse_mode="HTML")
+        msg_wait = bot.send_message(message.chat.id, "🛰️ <code>GENERANDO IDENTIDAD...</code>", parse_mode="HTML")
 
-        # 2. Llamada al generador (Asegúrate de que FakeID esté importado arriba)
         fake_data = FakeID.generate(country_code)
 
         if fake_data:
-            # Extraemos la foto y preparamos los datos para la tabla
+            # Sacamos la foto para que no estorbe en la tabla
             photo_url = fake_data.pop("PHOTO_URL", None)
-            
-            # Formateamos la tabla usando tu Visual Engine
             output = Visuals.format_table(f"FIDE ID: {country_code}", fake_data)
 
-            if photo_url:
+            try:
+                # Intenta enviar la foto
                 bot.send_photo(message.chat.id, photo_url, caption=output, parse_mode="HTML")
-            else:
-                bot.send_message(message.chat.id, output, parse_mode="HTML")
+                bot.delete_message(message.chat.id, msg_wait.message_id)
+            except:
+                # SI LA FOTO FALLA (Error 400), envía solo el texto
+                bot.edit_message_text(output, message.chat.id, msg_wait.message_id, parse_mode="HTML")
         else:
-            bot.reply_to(message, "❌ <b>ERROR:</b> El generador devolvió datos vacíos.")
+            bot.edit_message_text("❌ <b>ERROR:</b> Datos vacíos.", message.chat.id, msg_wait.message_id, parse_mode="HTML")
 
     except Exception as e:
-        # ESTO NOS DIRÁ EL ERROR REAL EN TELEGRAM
-        bot.reply_to(message, f"🚨 <b>DEBUG ERROR:</b> <code>{str(e)}</code>", parse_mode="HTML")
-        print(f"Error en /fake: {e}")
+        bot.reply_to(message, f"🚨 <b>DEBUG:</b> <code>{str(e)}</code>", parse_mode="HTML")
 # -----------------------------------------------------------------
 # [ADMIN] /PANEL - CONTROL TOTAL DE INFRAESTRUCTURA
 # -----------------------------------------------------------------

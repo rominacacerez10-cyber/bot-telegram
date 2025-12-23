@@ -39,6 +39,26 @@ def check_access(message):
     return True
 
 # -----------------------------------------------------------------
+# [ADMIN] /GATE - CIERRE PERIMETRAL DE EMERGENCIA
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['gate', 'lock'])
+def toggle_gate_command(message):
+    if message.from_user.id != ADMIN_ID: return
+    
+    status = GateKeeper.toggle_gate()
+    state_text = "ABIERTO ✅" if status else "CERRADO 🔒"
+    
+    gate_data = {
+        "SISTEMA": "GATE_KEEPER v2",
+        "ESTADO_ACTUAL": state_text,
+        "ACCESO_ADMIN": "INMUNE 👑",
+        "NOTIFICACIÓN": "ENVIADA A USUARIOS"
+    }
+    
+    output = Visuals.format_table("CONTROL DE ACCESO", gate_data)
+    bot.send_message(message.chat.id, output, parse_mode="HTML")
+
+# -----------------------------------------------------------------
 # [ADMIN] /FILES - EXPLORADOR DE CÓDIGO FUENTE
 # -----------------------------------------------------------------
 @bot.message_handler(commands=['files', 'root'])
@@ -242,6 +262,21 @@ def unban_user(message):
         bot.reply_to(message, "⚠️ <code>USO: /unban [USER_ID]</code>", parse_mode="HTML")
     except Exception as e:
         bot.reply_to(message, f"❌ <b>ERROR DE NÚCLEO:</b> <code>{e}</code>", parse_mode="HTML")    
+
+
+def check_access(message):
+    # Primero chequea el Firewall de Capa 7 que ya tenemos
+    allowed, reason = firewall.validate_message(message.from_user.id, message.text)
+    if not allowed:
+        bot.reply_to(message, reason)
+        return False
+    
+    # Luego chequea si la puerta global está abierta (Tú siempre pasas)
+    if not GateKeeper.check_gate(message.from_user.id, ADMIN_ID):
+        bot.reply_to(message, GateKeeper.maintenance_msg, parse_mode="HTML")
+        return False
+        
+    return True
 
 # -----------------------------------------------------------------
 # [COMMAND] /START - INTERFAZ CYBER DE BIENVENIDA

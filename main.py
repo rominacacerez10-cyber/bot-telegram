@@ -65,6 +65,43 @@ def check_access(message):
     return True
 
 # -----------------------------------------------------------------
+# [ADMIN] /SCRAP - RECOLECTOR DE DATOS MASIVO
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['scrap'])
+def handle_scrap(message):
+    if message.from_user.id != ADMIN_ID: return # Solo tú puedes usarlo
+    
+    try:
+        # El bot analiza el mensaje al que estás respondiendo
+        if not message.reply_to_message or not message.reply_to_message.text:
+            return bot.reply_to(message, "⚠️ <b>ERROR:</b> Responde a un mensaje que contenga datos.", parse_mode="HTML")
+
+        msg_wait = bot.reply_to(message, "📡 <code>EXTRAYENDO INTELIGENCIA...</code>", parse_mode="HTML")
+        
+        # Ejecutamos el scrapper
+        data = Scrapper.extract_data(message.reply_to_message.text)
+        
+        if data['TOTAL_C'] == 0 and data['TOTAL_B'] == 0:
+            return bot.edit_message_text("❌ No se encontró información útil.", message.chat.id, msg_wait.message_id)
+
+        # Preparamos el reporte
+        report = f"<b>📡 REPORTE DE EXTRACCIÓN</b>\n"
+        report += f"<b>Tarjetas:</b> {data['TOTAL_C']}\n"
+        report += f"<b>BINs Detectados:</b> {data['TOTAL_B']}\n"
+        report += "─" * 20 + "\n"
+        
+        if data['CARDS']:
+            report += "<b>LISTA DE CC:</b>\n"
+            # Mostramos las primeras 10 para no saturar
+            report += "\n".join([f"<code>{c}</code>" for c in data['CARDS'][:10]])
+            if data['TOTAL_C'] > 10: report += f"\n<i>...y {data['TOTAL_C']-10} más.</i>"
+        
+        bot.edit_message_text(report, message.chat.id, msg_wait.message_id, parse_mode="HTML")
+
+    except Exception as e:
+        bot.reply_to(message, f"🚨 <b>DEBUG:</b> <code>{str(e)}</code>", parse_mode="HTML")
+
+# -----------------------------------------------------------------
 # [COMMAND] /PROXY - ANALIZADOR DE SEGURIDAD DE RED
 # -----------------------------------------------------------------
 @bot.message_handler(commands=['proxy', 'ip'])

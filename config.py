@@ -14,7 +14,7 @@ LOG_CHANNEL = -1002319403816
 
 # 4. CONFIGURACIÓN DE BASE DE DATOS (MongoDB)
 # Reemplaza con tu cadena de conexión real
-MONGO_URI = "mongodb+srv://admin:<sbI8ojgXZsKHEJKu>@cluster0.gprhwkr.mongodb.net/?appName=Cluster0"
+MONGO_URI = "mongodb+srv://admin:sbI8ojgXZsKHEJKu@cluster0.gprhwkr.mongodb.net/?appName=Cluster0"
 
 # 5. PARÁMETROS DEL SISTEMA
 VERSION = "35.0 OMNIPOTENT"

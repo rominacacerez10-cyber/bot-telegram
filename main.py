@@ -35,6 +35,56 @@ def check_access(message):
         bot.reply_to(message, f"<b>🛡️ FIREWALL: {reason}</b>", parse_mode="HTML")
         return False
     return True
+
+# -----------------------------------------------------------------
+# [ADMIN] /BROADCAST - DIFUSIÓN GLOBAL OMNIPOTENTE
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['broadcast', 'bc'])
+def broadcast_command(message):
+    # Verificación de rango supremo
+    if message.from_user.id != ADMIN_ID: return
+    
+    try:
+        # Extraer el mensaje (todo lo que va después de /bc)
+        broadcast_msg = message.text.split(None, 1)[1]
+        
+        # Obtener todos los IDs de la base de datos que ya tenemos
+        all_users = users_col.find({}, {"_id": 1})
+        
+        count_success = 0
+        count_error = 0
+        
+        bot.send_message(message.chat.id, "🚀 <b>INICIANDO DIFUSIÓN GLOBAL...</b>", parse_mode="HTML")
+        
+        for user in all_users:
+            try:
+                # Formatear el mensaje con la estética del bot
+                final_text = (
+                    f"{Visuals.get_header()}\n\n"
+                    f"📢 <b>COMUNICADO OFICIAL:</b>\n\n"
+                    f"<code>{broadcast_msg}</code>\n\n"
+                    f"<i>Atentamente: Admin Supremo</i>"
+                )
+                bot.send_message(user['_id'], final_text, parse_mode="HTML")
+                count_success += 1
+                time.sleep(0.1) # Evitar baneo de Telegram por spam rápido
+            except:
+                count_error += 1
+                continue
+        
+        # Reporte final para el Admin
+        report = {
+            "ENVIADOS": count_success,
+            "FALLIDOS": count_error,
+            "TOTAL": count_success + count_error,
+            "ESTADO": "COMPLETADO ✅"
+        }
+        
+        output = Visuals.format_table("BROADCAST REPORT", report)
+        bot.send_message(message.chat.id, output, parse_mode="HTML")
+        
+    except IndexError:
+        bot.reply_to(message, "⚠️ <code>USO: /bc [MENSAJE]</code>", parse_mode="HTML")
     
 # -----------------------------------------------------------------
 # [ADMIN] /STATUS - MONITOR DE SALUD DEL NÚCLEO

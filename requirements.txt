@@ -1,6 +1,7 @@
-pyTelegramBotAPI==4.21.0
-pymongo[srv]==4.10.1
-dnspython==2.7.0
-flask==3.0.3
-gunicorn==22.0.0
-requests==2.32.3
+pyTelegramBotAPI
+requests
+pymongo[srv]
+flask
+psutil
+dnspython
+datetime

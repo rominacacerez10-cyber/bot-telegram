@@ -91,7 +91,7 @@ class ZeusGate:
     @staticmethod
     def check_zeus(cc, mm, yy, cvv):
         # TU LLAVE COMPLETA YA ESTÁ AQUÍ
-        sk = "sk_test_51Shy26APuGnFVpIFWGs3l4ZnoWSuNTK5Jle8FtO4N5e4J5GGFxPEjrGpUPkVsZkjFAhlSIAES22bSnvCTgYM56eG00FGF2Bxcx"
+        sk = os.getenv("STRIPE_SK")
         
         try:
             # 1. CREAR TOKEN (Para saltar el bloqueo de "Unsafe Raw Card Data")

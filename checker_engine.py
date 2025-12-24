@@ -88,7 +88,7 @@ class ZeusGate:
     """GATEWAY DE POTENCIA REAL 'CHARGEABLE' (NO SIMULADOR)"""
     @staticmethod
     def check_zeus(cc, mm, yy, cvv):
-        pk = PKHunter.get_fresh_pk()
+        sk = "sk_test_51Shy26AP..."
         headers = {'User-Agent': 'Stripe/v1 AndroidBindings/20.14.1'}
         
         payload = {

@@ -180,26 +180,31 @@ def handle_omni_gate(message):
         print(f"Error en Chaos: {e}")
         bot.send_message(message.chat.id, f"🚨 <b>FALLO EN CHAOS:</b> <code>{str(e)}</code>", parse_mode="HTML")
 
-# --- AHORA SÍ, AQUÍ EMPIEZA ZEUS SIN ERRORES ---
-def send_formatted_result(message, result, data, gate_name, msg_wait):
-    # Diseño simple pero efectivo para el resultado
-    response = (
-        f"<b>み ¡CJKiller_CHk⚡ ↝ Result</b>\n\n"
-        f"<b>• CC ↝</b> <code>{data}</code>\n"
-        f"<b>• Status ↝</b> {result.get('status', 'ERROR')}\n"
-        f"<b>• Message ↝</b> {result.get('msg', 'N/A').upper()}\n"
-        f"<b>• Gateway ↝</b> {gate_name}\n\n"
-        f"<b>• Req ↝</b> @{message.from_user.username}"
-    )
-    
+# --- AQUÍ EMPIEZA ZEUS OMNIPOTENTE ---
+@bot.message_handler(commands=['zeus'])
+def handle_zeus_gate(message):
     try:
-        bot.delete_message(message.chat.id, msg_wait.message_id)
-        bot.send_message(message.chat.id, response, parse_mode="HTML")
-    except:
-        bot.send_message(message.chat.id, response, parse_mode="HTML")
+        args = message.text.split()
+        if len(args) < 2:
+            return bot.reply_to(message, "<b>⚠️ Uso:</b> <code>/zeus CC|MM|YY|CVV</code>", parse_mode="HTML")
+        
+        data = args[1]
+        cc_parts = data.split('|')
+        if len(cc_parts) < 4:
+            return bot.reply_to(message, "<b>❌ Formato inválido.</b>", parse_mode="HTML")
+            
+        cc, mm, yy, cvv = cc_parts[0], cc_parts[1], cc_parts[2], cc_parts[3]
+        msg_wait = bot.reply_to(message, "<b>⚡ ZEUS STRIKING... ☁️</b>", parse_mode="HTML")
+        
+        # Llamada al motor de cargo real
+        from checker_engine import ZeusGate
+        result = ZeusGate.check_zeus(cc, mm, yy, cvv)
+        
+        # Usamos la función de diseño que ya tienes en la línea 123
+        send_formatted_result(message, result, data, "ZEUS ⚡ (Charge $1)", msg_wait)
 
     except Exception as e:
-        bot.send_message(message.chat.id, f"<b>❌ Error Crítico:</b> <code>{str(e)}</code>", parse_mode="HTML")
+        bot.send_message(message.chat.id, f"<b>❌ ERROR EN ZEUS:</b> <code>{str(e)}</code>", parse_mode="HTML")
                             
 bot.infinity_polling()
 # =================================================================

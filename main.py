@@ -136,28 +136,31 @@ def handle_omni_gate(message):
         risk_status = RiskAnalyzer.get_risk_report(result.get('raw', {}))
         taken_time = round(time.time() - start_time, 2)
         
-# --- DISEÑO EXACTO A LA MUESTRA ---
-# Definimos el texto con la estética de élite
-response = (
-    f"<b>み ¡CJKiller_CHk⚡ ↝ Result</b>\n\n"
-    f"<b>• CC ↝</b> <code>{data}</code>\n"
-    f"<b>• Status ↝</b> {result['status']}\n"
-    f"<b>• Message ↝</b> {result['msg'].upper()}\n"
-    f"<b>• Gateway ↝</b> Chaos Auth V2\n\n"
-    f"<b>• Seg ↝</b> {risk_status}\n"
-    f"<b>• Bin ↝</b> {bin_info['brand']} - {bin_info['level']}\n"
-    f"<b>• Bank ↝</b> {bin_info['bank']}\n"
-    f"<b>• Country ↝</b> {bin_info['country']} {bin_info['flag']}\n\n"
-    f"<b>• T/T ↝</b> <code>{taken_time}' Sec</code>\n"
-    f"<b>• Req ↝</b> @{message.from_user.username}\n"
-    f"<b>• DevBy ↝</b> @TuUsuarioAdmin"
-)
+# --- ESTO CIERRA EL ERROR DE LA CAPTURA Y PONE EL BANNER ABAJO ---
+        response = (
+            f"<b>み ¡CJKiller_CHk⚡ ↝ Result</b>\n\n"
+            f"<b>• CC ↝</b> <code>{data}</code>\n"
+            f"<b>• Status ↝</b> {result['status']}\n"
+            f"<b>• Message ↝</b> {result['msg'].upper()}\n"
+            f"<b>• Gateway ↝</b> Chaos Auth V2\n\n"
+            f"<b>• Seg ↝</b> {risk_status}\n"
+            f"<b>• Bin ↝</b> {bin_info['brand']} - {bin_info['level']}\n"
+            f"<b>• Bank ↝</b> {bin_info['bank']}\n"
+            f"<b>• Country ↝</b> {bin_info['country']} {bin_info['flag']}\n\n"
+            f"<b>• T/T ↝</b> <code>{taken_time}' Sec</code>\n"
+            f"<b>• Req ↝</b> @{message.from_user.username}\n"
+            f"<b>• DevBy ↝</b> @TuUsuarioAdmin"
+        )
 
-# Banner optimizado (Horizontal para que quepa abajo/lado)
-banner_url = "https://i.imgur.com/8mSgQW9.png" 
+        banner_url = "https://i.imgur.com/8mSgQW9.png"
+        bot.delete_message(message.chat.id, msg_wait.message_id)
+        
+        # Enviamos la foto con el texto como caption (Banner abajo)
+        bot.send_photo(message.chat.id, banner_url, caption=response, parse_mode="HTML")
 
-# Borramos el mensaje de espera y enviamos con el formato de la muestra
-bot.delete_message(message.chat.id, msg_wait.message_id)
+    except Exception as e:
+        # ESTE BLOQUE ES EL QUE FALTA EN TU CAPTURA Y CAUSA EL ERROR
+        bot.send_message(message.chat.id, f"🚨 <b>ERROR:</b> <code>{str(e)}</code>", parse_mode="HTML")
 
 # Usamos send_photo pero asegurando que el caption sea el cuerpo del mensaje
 bot.send_photo(

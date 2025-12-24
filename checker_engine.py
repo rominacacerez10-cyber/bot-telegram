@@ -1,4 +1,5 @@
 import requests
+import json
 from pk_hunter import PKHunter
 
 class BinLookup:

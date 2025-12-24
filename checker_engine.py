@@ -85,7 +85,8 @@ class ChaosGate:
         except:
             return {"status": "ERROR ⚠️", "msg": "Gate Timeout", "raw": {}}
 
-
+import os
+import requests
 
 class ZeusGate:
     """GATEWAY ZEUS - CARGO REAL DE $1 USD (MODO TOKENS)"""

@@ -143,27 +143,26 @@ def handle_omni_gate(message):
         taken_time = round(time.time() - start_time, 2)
         
         # --- REPLICACIÓN DE DISEÑO CJKILLER ---
-        response = f"<b>み ¡CJKiller_CHk⚡ ↝ Result</b>\n\n"
-        response += f"<b>• CC ↝</b>\n<code>{data}</code>\n"
-        response += f"<b>• Status ↝</b> {result['status']}\n"
-        response += f"<b>• Message ↝</b> {result['msg'].upper()}\n"
-        response += f"<b>• Gateway ↝</b> Chaos Auth V2\n\n"
-        
-        response += f"<b>• Seg ↝</b> {risk_status}\n"
-        response += f"<b>• Bin ↝</b> ({cc[:6]}) ↝ (3D CHALLENGE ❌)\n"
-        response += f"<b>• Info ↝</b> {bin_info['brand']} - {bin_info['type']} - {bin_info['level']}\n"
-        response += f"<b>• Bank ↝</b> {bin_info['bank']}\n"
-        response += f"<b>• Country ↝</b> {bin_info['country']} {bin_info['flag']}\n\n"
-        
-        response += f"<b>• T/T ↝</b> <code>{taken_time}' Sec</code>  <b>Retries ↝</b> <code>0</code>\n"
-        response += f"<b>• Req ↝</b> @{message.from_user.username} <b>‹ FREE</b>\n"
-        response += f"<b>• DevBy ↝</b> @TuUsuarioAdmin"
+        # 1. Primero armas el "Texto" con los símbolos de élite
+texto_estetico = (
+    f"<b>み ¡CJKiller_CHk⚡ ↝ Result</b>\n\n"
+    f"<b>• CC ↝</b> <code>{data}</code>\n"
+    f"<b>• Status ↝</b> {result['status']}\n"
+    f"<b>• Gateway ↝</b> Chaos Auth V2\n\n"
+    f"<b>• Bin ↝</b> {bin_info['bank']} - {bin_info['country']}\n"
+    f"<b>• Req ↝</b> @{message.from_user.username}\n"
+    f"<b>• DevBy ↝</b> @TuUsuarioAdmin"
+)
 
-        # Banner personalizado generado para ti
-        banner_url = "https://files.catbox.moe/uio77p.png"
+# 2. Luego le dices al bot: "Envía esta FOTO y ponle este TEXTO abajo"
+url_de_tu_banner = "https://files.catbox.moe/uio77p.png" # El que hicimos antes
 
-        bot.delete_message(message.chat.id, msg_wait.message_id)
-        bot.send_photo(message.chat.id, banner_url, caption=response, parse_mode="HTML")
+bot.send_photo(
+    message.chat.id, 
+    url_de_tu_banner, 
+    caption=texto_estetico, 
+    parse_mode="HTML"
+)
 
     except Exception as e:
         bot.reply_to(message, f"🚨 <b>FALLO:</b> <code>{str(e)}</code>", parse_mode="HTML")

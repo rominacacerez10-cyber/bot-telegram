@@ -138,6 +138,25 @@ def handle_omni_gate(message):
         result = ChaosGate.check_chaos(*data.split('|'))
         risk_status = RiskAnalyzer.get_risk_report(result.get('raw', {}))
         taken_time = round(time.time() - start_time, 2)
+
+# --- COMANDO /zeus (CHARGE PRE-CHECK) ---
+@bot.message_handler(commands=['zeus'])
+def handle_zeus(message):
+    args = message.text.split()
+    if len(args) < 2: return
+    
+    data = args[1]
+    # Mensaje de impacto visual
+    msg_wait = bot.reply_to(message, "⚡ <code>ZEUS STRIKING...</code>", parse_mode="HTML")
+    
+    try:
+        cc, mm, yy, cvv = data.split('|')
+        # Llamamos al motor Zeus
+        result = ZeusGate.check_zeus(cc, mm, yy, cvv)
+        # Usamos la MISMA función de diseño (Banner Abajo)
+        send_formatted_result(message, result, data, "Zeus Charge V3 ⚡", msg_wait)
+    except:
+        bot.edit_message_text("❌ <b>FORMATO INVÁLIDO</b>", message.chat.id, msg_wait.message_id, parse_mode="HTML")        
         
 # --- ESTO CIERRA EL ERROR DE LA CAPTURA Y PONE EL BANNER ABAJO ---
         response = (

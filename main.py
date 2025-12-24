@@ -36,6 +36,19 @@ def check_access(message):
         
     return True
 
+class RiskAnalyzer:
+    @staticmethod
+    def get_risk_report(response_json):
+        # Analiza el JSON crudo de Stripe para medir la confianza
+        risk_level = response_json.get('outcome', {}).get('risk_level', 'unknown')
+        
+        if risk_level == 'highest':
+            return "🔴 RIESGO ALTO (Proxy detectado)"
+        elif risk_level == 'elevated':
+            return "🟡 RIESGO MEDIO (IP sospechosa)"
+        else:
+            return "🟢 RIESGO BAJO (Conexión Limpia)"
+
 # --- IMPORTACIÓN DE MÓDULOS DE ÉLITE ---
 from config import TOKEN, ADMIN_ID, LOG_CHANNEL
 from visual_engine import Visuals
@@ -72,6 +85,38 @@ def check_access(message):
         bot.reply_to(message, f"<b>🛡️ FIREWALL: {reason}</b>", parse_mode="HTML")
         return False
     return True
+
+# -----------------------------------------------------------------
+# [VIP] /CHAOS - EL GATEWAY DEFINITIVO
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['chaos'])
+def handle_chaos(message):
+    if not check_access(message): return
+    
+    try:
+        data = message.text.split()[1]
+        cc, mm, yy, cvv = data.split('|')
+        
+        msg_wait = bot.reply_to(message, "🌀 <code>INICIANDO CHAOS AUTH PROTOCOL...</code>", parse_mode="HTML")
+        
+        # Ejecutamos el motor de caos
+        from checker_engine import ChaosGate
+        result = ChaosGate.check_chaos(cc, mm, yy, cvv)
+        
+        # Formateo de respuesta extrema
+        response = f"<b>🌀 CHAOS GATE RESULT</b>\n"
+        response += "─" * 20 + "\n"
+        response += f"<b>CARD:</b> <code>{data}</code>\n"
+        response += f"<b>STATUS:</b> {result['status']}\n"
+        response += f"<b>GATE:</b> <code>{result['gate']}</code>\n"
+        response += f"<b>MSG:</b> <code>{result['msg']}</code>\n"
+        response += "─" * 20 + "\n"
+        response += f"<b>HUNTED PK:</b> <code>Active</code>"
+
+        bot.edit_message_text(response, message.chat.id, msg_wait.message_id, parse_mode="HTML")
+
+    except:
+        bot.reply_to(message, "⚠️ <b>USO:</b> <code>/chaos CC|MM|YY|CVV</code>", parse_mode="HTML")
 
 # =================================================================
 # PROJECT: CJKILLER OMNIPOTENT

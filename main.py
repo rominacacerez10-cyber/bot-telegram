@@ -119,6 +119,38 @@ def check_access(message):
 # -----------------------------------------------------------------
 # [VIP] /CHAOS - EL GATEWAY DEFINITIVO
 # -----------------------------------------------------------------
+# --- FUNCIÓN MAESTRA DE DISEÑO (ESTO ES LO QUE FALTA) ---
+def send_formatted_result(message, result, data, gate_name, msg_wait, bin_info=None, risk_status="N/A", taken_time="0.0"):
+    # Si no tenemos info del bin, la buscamos rápido
+    if not bin_info:
+        from checker_engine import BinLookup
+        bin_info = BinLookup.get_info(data[:6])
+    
+    # Construcción del mensaje con estética extrema
+    response = (
+        f"<b>み ¡CJKiller_CHk⚡ ↝ Result</b>\n\n"
+        f"<b>• CC ↝</b> <code>{data}</code>\n"
+        f"<b>• Status ↝</b> {result['status']}\n"
+        f"<b>• Message ↝</b> {result['msg'].upper()}\n"
+        f"<b>• Gateway ↝</b> {gate_name}\n\n"
+        f"<b>• Seg ↝</b> {risk_status}\n"
+        f"<b>• Bin ↝</b> {bin_info['brand']} - {bin_info['level']}\n"
+        f"<b>• Bank ↝</b> {bin_info['bank']}\n"
+        f"<b>• Country ↝</b> {bin_info['country']} {bin_info['flag']}\n\n"
+        f"<b>• Req ↝</b> @{message.from_user.username}\n"
+        f"<b>• DevBy ↝</b> @TuUsuarioAdmin"
+    )
+    
+    banner_url = "https://i.imgur.com/8mSgQW9.png" # Tu banner personalizado
+    
+    try:
+        # Borramos el "STRIKING..." y enviamos el resultado con banner abajo
+        bot.delete_message(message.chat.id, msg_wait.message_id)
+        bot.send_photo(message.chat.id, banner_url, caption=response, parse_mode="HTML")
+    except Exception as e:
+        # Si falla la foto, enviamos solo el texto para no dejarte colgado
+        bot.send_message(message.chat.id, response, parse_mode="HTML")
+
 
 # Reemplaza con tu Token real
 @bot.message_handler(commands=['chaos', 'chk'])

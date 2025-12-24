@@ -73,6 +73,27 @@ def check_access(message):
         return False
     return True
 
+# =================================================================
+# PROJECT: CJKILLER OMNIPOTENT
+# MODULE: risk_analyzer.py (CAPA DE INTELIGENCIA)
+# =================================================================
+
+class RiskAnalyzer:
+    @staticmethod
+    def get_risk_report(response_json):
+        """Analiza la respuesta de Stripe sin alterar el flujo del gate."""
+        # Extraemos el nivel de riesgo que Stripe asigna a la transacción
+        risk_level = response_json.get('outcome', {}).get('risk_level', 'unknown')
+        risk_score = response_json.get('outcome', {}).get('risk_score', 0)
+        
+        # Interpretación Omnipotente
+        if risk_level == 'highest' or risk_score > 70:
+            return "🔴 RIESGO ALTO: Proxy Quemado o IP bajo sospecha."
+        elif risk_level == 'elevated':
+            return "🟡 RIESGO MEDIO: La pasarela está dudando de la conexión."
+        else:
+            return "🟢 RIESGO BAJO: Conexión limpia, resultado confiable."
+
 # -----------------------------------------------------------------
 # [COMMAND] /STATUS - MONITOR DE SALUD DEL SISTEMA
 # -----------------------------------------------------------------

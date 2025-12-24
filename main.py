@@ -139,26 +139,33 @@ def handle_omni_gate(message):
         risk_status = RiskAnalyzer.get_risk_report(result.get('raw', {}))
         taken_time = round(time.time() - start_time, 2)
 
-# --- COMANDO /zeus (CHARGE PRE-CHECK) ---
+        
+        # Aquí cerramos el comando Chaos y enviamos el resultado
+        send_formatted_result(message, result, data, "Chaos Auth V2 ⚡", msg_wait, bin_info, risk_status, taken_time)
+
+    except Exception as e:
+        # Este es el "muro" que faltaba para que el bot no se crashee
+        print(f"Error en Chaos: {e}")
+        bot.send_message(message.chat.id, f"🚨 <b>FALLO EN CHAOS:</b> <code>{str(e)}</code>", parse_mode="HTML")
+
+# --- AHORA SÍ, AQUÍ EMPIEZA ZEUS SIN ERRORES ---
 @bot.message_handler(commands=['zeus'])
 def handle_zeus(message):
     try:
         args = message.text.split()
-        if len(args) < 2:
-            return bot.reply_to(message, "⚠️ <b>USO:</b> <code>/zeus CC|MM|YY|CVV</code>", parse_mode="HTML")
+        if len(args) < 2: return
         
         data = args[1]
         msg_wait = bot.reply_to(message, "⚡ <code>ZEUS STRIKING...</code>", parse_mode="HTML")
         
         cc, mm, yy, cvv = data.split('|')
-        # Buscamos LIVES reales con el motor Zeus
+        # Buscamos tarjetas 'Chargeable' con poder real
         result = ZeusGate.check_zeus(cc, mm, yy, cvv)
         
-        # Esta función ya tiene el diseño del banner abajo, no necesitas escribirlo de nuevo aquí
+        # El banner sale abajo automáticamente gracias a la función de diseño
         send_formatted_result(message, result, data, "Zeus Charge V3 ⚡", msg_wait)
-
+        
     except Exception as e:
-        print(f"Error en Zeus: {e}")
         bot.send_message(message.chat.id, f"🚨 <b>FALLO EN ZEUS:</b> <code>{str(e)}</code>", parse_mode="HTML")
 
                             

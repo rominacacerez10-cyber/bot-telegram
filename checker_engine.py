@@ -1,6 +1,7 @@
 import requests
 import json
 from pk_hunter import PKHunter
+import os
 
 class BinLookup:
     """SISTEMA DE INTELIGENCIA DE BINS"""

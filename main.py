@@ -25,18 +25,25 @@ import os
 from flask import Flask
 from threading import Thread
 
-# Esto engaña a Render para que crea que es una web
+# 1. Creamos un servidor minúsculo para engañar a Render
 app = Flask('')
+
 @app.route('/')
-def home(): return "Bot CJKiller is Online"
+def home():
+    return "CJKiller Bot is Live!"
 
 def run():
+    # Render asigna un puerto automáticamente, aquí lo atrapamos
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
 
+# 2. Iniciamos el servidor en segundo plano para que no detenga el bot
 def keep_alive():
     t = Thread(target=run)
     t.start()
+
+# 3. LLAMADA CRÍTICA: Añade esta línea antes de tu bot.infinity_polling()
+keep_alive()
 
 # --- CAPA DE SEGURIDAD (EL ESCUDO) ---
 def check_access(message):

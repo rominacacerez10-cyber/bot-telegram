@@ -93,10 +93,10 @@ def check_access(message):
 # [VIP] /CHAOS - EL GATEWAY DEFINITIVO
 # -----------------------------------------------------------------
 @bot.message_handler(commands=['chaos', 'chk'])
-def handle_premium_gate(message):
-    if not check_access(message): return
+def handle_omni_gate(message):
+    if not check_access(message): return # Seguridad Admin
     
-    start_time = time.time() # Reloj para el T/T
+    start_time = time.time() # T/T Start
     
     try:
         args = message.text.split()
@@ -106,27 +106,23 @@ def handle_premium_gate(message):
         data = args[1]
         cc, mm, yy, cvv = data.split('|')
         
-        # 1. Animación de carga profesional
-        msg_wait = bot.reply_to(message, "⚡ <code>PROCESANDO EN CAOS V2...</code>", parse_mode="HTML")
+        # 1. Mensaje de espera con estilo
+        msg_wait = bot.reply_to(message, "🌀 <code>INICIANDO PROTOCOLO OMNIPOTENTE...</code>", parse_mode="HTML")
         
-        # 2. Obtener Info del BIN
+        # 2. Motores de Inteligencia
         bin_info = BinLookup.get_info(cc[:6])
-        
-        # 3. Ejecutar Gate de Élite
         result = ChaosGate.check_chaos(cc, mm, yy, cvv)
-        
-        # 4. Analizar Riesgo Real
         risk_status = RiskAnalyzer.get_risk_report(result.get('raw', {}))
         
-        # 5. Cálculo de Tiempo y Finalización
+        # 3. Cronómetro de precisión
         taken_time = round(time.time() - start_time, 2)
         
-        # --- DISEÑO REPLICADO AL 1000% ---
+        # --- REPLICACIÓN ESTÉTICA HARDCORE ---
         response = f"<b>み ¡CJKiller_CHk⚡ ↝ Result</b>\n\n"
         response += f"<b>• CC ↝</b>\n<code>{data}</code>\n"
         response += f"<b>• Status ↝</b> {result['status']}\n"
         response += f"<b>• Message ↝</b> {result['msg'].upper()}\n"
-        response += f"<b>• Gateway ↝</b> Chaos Auth\n\n"
+        response += f"<b>• Gateway ↝</b> Chaos Auth V2\n\n"
         
         response += f"<b>• Seg ↝</b> {risk_status}\n"
         response += f"<b>• Bin ↝</b> ({cc[:6]}) ↝ (3D CHALLENGE ❌)\n"
@@ -138,10 +134,10 @@ def handle_premium_gate(message):
         response += f"<b>• Req ↝</b> @{message.from_user.username} <b>‹ FREE</b>\n"
         response += f"<b>• DevBy ↝</b> @TuUsuarioAdmin"
 
-        # URL de tu Banner (Asegúrate de poner un link real aquí)
-        banner_url = "https://i.imgur.com/tu_banner_aqui.jpg" 
+        # URL DEL BANNER GENERADO POR IA
+        banner_url = "https://files.catbox.moe/uio77p.png" # Imagen personalizada CJKILLER
 
-        # Borramos el mensaje de carga y enviamos el resultado con foto
+        # Borramos espera y enviamos el resultado imponente
         bot.delete_message(message.chat.id, msg_wait.message_id)
         bot.send_photo(message.chat.id, banner_url, caption=response, parse_mode="HTML")
 

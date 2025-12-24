@@ -85,8 +85,7 @@ class ChaosGate:
 
 
 class ZeusGate:
-    "class ZeusGate:
-    """GATEWAY DE POTENCIA REAL 'CHARGEABLE' (NO SIMULADOR)"""
+    
     @staticmethod
     def check_zeus(cc, mm, yy, cvv):
         # TU LLAVE MAESTRA QUE SACASTE DE LA CAPTURA

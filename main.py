@@ -55,6 +55,7 @@ from codec_engine import CodecEngine
 from binary_engine import BinaryEngine
 from broadcast_engine import BroadcastManager
 from checker_engine import CCChecker
+from proxy_manager import ProxyManager
 
 # [DEF 1] INICIALIZACIÓN DE POTENCIA (5000 THREADS)
 # Esto permite que el bot procese ataques y consultas masivas sin lag.

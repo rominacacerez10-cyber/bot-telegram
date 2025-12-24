@@ -198,6 +198,8 @@ def send_formatted_result(message, result, data, gate_name, msg_wait):
     except:
         bot.send_message(message.chat.id, response, parse_mode="HTML")
 
+except Exception as e:
+        bot.send_message(message.chat.id, f"<b>❌ Error Crítico:</b> <code>{str(e)}</code>", parse_mode="HTML")
                             
 bot.infinity_polling()
 # =================================================================

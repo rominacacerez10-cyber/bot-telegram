@@ -154,16 +154,15 @@ def handle_omni_gate(message):
             f"<b>• DevBy ↝</b> @TuUsuarioAdmin"
         )
 
-        banner_url = "https://i.imgur.com/8mSgQW9.png" # URL de alta velocidad para Telegram
-
+        
         try:
-    # Intentamos enviar con la foto y el diseño de élite
-    bot.send_photo(message.chat.id, banner_url, caption=response, parse_mode="HTML")
-except Exception as e:
-    # Si la foto falla por el servidor, enviamos solo el texto estético para no dejar al usuario esperando
-    bot.send_message(message.chat.id, response, parse_mode="HTML")
-    except Exception as e:
-        # ESTE ES EL BLOQUE QUE FALTABA EN TU CAPTURA
+            banner_url = "https://i.imgur.com/8mSgQW9.png" # URL estable
+            bot.delete_message(message.chat.id, msg_wait.message_id)
+            bot.send_photo(message.chat.id, banner_url, caption=response, parse_mode="HTML")
+        except Exception as e:
+            # Si la foto falla, enviamos el texto para que el usuario reciba su resultado
+            bot.send_message(message.chat.id, response, parse_mode="HTML")
+            print(f"Error enviando foto: {e}")
         bot.reply_to(message, f"🚨 <b>FALLO:</b> <code>{str(e)}</code>", parse_mode="HTML")
 
 bot.infinity_polling()

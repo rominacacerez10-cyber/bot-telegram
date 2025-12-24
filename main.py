@@ -153,22 +153,23 @@ def handle_omni_gate(message):
         )
 
         banner_url = "https://i.imgur.com/8mSgQW9.png"
+        
+        # Primero borramos el mensaje de espera
         bot.delete_message(message.chat.id, msg_wait.message_id)
         
-        # Enviamos la foto con el texto como caption (Banner abajo)
-        bot.send_photo(message.chat.id, banner_url, caption=response, parse_mode="HTML")
+        # 1. ESTA ES LA CLAVE: Enviamos la foto con el texto como CAPTION
+        # Esto pone el banner abajo y el texto arriba/lado como tu muestra.
+        bot.send_photo(
+            message.chat.id, 
+            banner_url, 
+            caption=response, 
+            parse_mode="HTML"
+        )
 
     except Exception as e:
-        # ESTE BLOQUE ES EL QUE FALTA EN TU CAPTURA Y CAUSA EL ERROR
+        # Esto soluciona el error de la captura de la 1:50 AM
+        print(f"Error en gate: {e}")
         bot.send_message(message.chat.id, f"🚨 <b>ERROR:</b> <code>{str(e)}</code>", parse_mode="HTML")
-
-# Usamos send_photo pero asegurando que el caption sea el cuerpo del mensaje
-bot.send_photo(
-    message.chat.id, 
-    banner_url, 
-    caption=response, 
-    parse_mode="HTML"
-)
 bot.infinity_polling()
 # =================================================================
 # PROJECT: CJKILLER OMNIPOTENT

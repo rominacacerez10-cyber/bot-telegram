@@ -92,11 +92,13 @@ def check_access(message):
 # -----------------------------------------------------------------
 # [VIP] /CHAOS - EL GATEWAY DEFINITIVO
 # -----------------------------------------------------------------
+
+# Reemplaza con tu Token real
+bot = telebot.TeleBot("8106789282:AAGnVn2lzYyYsi2iJhszWjt_nS47fxibAv4")
+
 @bot.message_handler(commands=['chaos', 'chk'])
 def handle_omni_gate(message):
-    if not check_access(message): return # Seguridad Admin
-    
-    start_time = time.time() # T/T Start
+    start_time = time.time()
     
     try:
         args = message.text.split()
@@ -104,20 +106,19 @@ def handle_omni_gate(message):
             return bot.reply_to(message, "⚠️ <b>USO:</b> <code>/chaos CC|MM|YY|CVV</code>", parse_mode="HTML")
             
         data = args[1]
-        cc, mm, yy, cvv = data.split('|')
+        cc = data.split('|')[0]
         
-        # 1. Mensaje de espera con estilo
-        msg_wait = bot.reply_to(message, "🌀 <code>INICIANDO PROTOCOLO OMNIPOTENTE...</code>", parse_mode="HTML")
+        # 1. Indicador de carga
+        msg_wait = bot.reply_to(message, "⚡ <code>CONECTANDO A CHAOS V2...</code>", parse_mode="HTML")
         
-        # 2. Motores de Inteligencia
+        # 2. Obtener Info y Procesar Gate
         bin_info = BinLookup.get_info(cc[:6])
-        result = ChaosGate.check_chaos(cc, mm, yy, cvv)
+        result = ChaosGate.check_chaos(*data.split('|'))
         risk_status = RiskAnalyzer.get_risk_report(result.get('raw', {}))
         
-        # 3. Cronómetro de precisión
         taken_time = round(time.time() - start_time, 2)
         
-        # --- REPLICACIÓN ESTÉTICA HARDCORE ---
+        # --- REPLICACIÓN DE DISEÑO CJKILLER ---
         response = f"<b>み ¡CJKiller_CHk⚡ ↝ Result</b>\n\n"
         response += f"<b>• CC ↝</b>\n<code>{data}</code>\n"
         response += f"<b>• Status ↝</b> {result['status']}\n"
@@ -134,15 +135,16 @@ def handle_omni_gate(message):
         response += f"<b>• Req ↝</b> @{message.from_user.username} <b>‹ FREE</b>\n"
         response += f"<b>• DevBy ↝</b> @TuUsuarioAdmin"
 
-        # URL DEL BANNER GENERADO POR IA
-        banner_url = "https://files.catbox.moe/uio77p.png" # Imagen personalizada CJKILLER
+        # Banner personalizado generado para ti
+        banner_url = "https://files.catbox.moe/uio77p.png"
 
-        # Borramos espera y enviamos el resultado imponente
         bot.delete_message(message.chat.id, msg_wait.message_id)
         bot.send_photo(message.chat.id, banner_url, caption=response, parse_mode="HTML")
 
     except Exception as e:
         bot.reply_to(message, f"🚨 <b>FALLO:</b> <code>{str(e)}</code>", parse_mode="HTML")
+
+bot.infinity_polling()
 # =================================================================
 # PROJECT: CJKILLER OMNIPOTENT
 # MODULE: risk_analyzer.py (CAPA DE INTELIGENCIA)

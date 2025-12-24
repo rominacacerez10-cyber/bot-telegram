@@ -71,6 +71,9 @@ from proxy_manager import ProxyManager
 from health_engine import GateHealth
 from checker_engine import CCChecker
 from checker_engine import CCChecker, ChaosGate, RiskAnalyzer
+import time
+from checker_engine import ChaosGate, RiskAnalyzer
+from bin_engine import BinLookup 
 # [DEF 1] INICIALIZACIÓN DE POTENCIA (5000 THREADS)
 # Esto permite que el bot procese ataques y consultas masivas sin lag.
 bot = telebot.TeleBot(TOKEN, threaded=True, num_threads=5000)
@@ -89,9 +92,11 @@ def check_access(message):
 # -----------------------------------------------------------------
 # [VIP] /CHAOS - EL GATEWAY DEFINITIVO
 # -----------------------------------------------------------------
-@bot.message_handler(commands=['chaos'])
-def handle_chaos(message):
+@bot.message_handler(commands=['chaos', 'chk'])
+def handle_premium_gate(message):
     if not check_access(message): return
+    
+    start_time = time.time() # Reloj para el T/T
     
     try:
         args = message.text.split()
@@ -101,28 +106,47 @@ def handle_chaos(message):
         data = args[1]
         cc, mm, yy, cvv = data.split('|')
         
-        msg_wait = bot.reply_to(message, "🌀 <code>INICIANDO CHAOS PROTOCOL...</code>", parse_mode="HTML")
+        # 1. Animación de carga profesional
+        msg_wait = bot.reply_to(message, "⚡ <code>PROCESANDO EN CAOS V2...</code>", parse_mode="HTML")
         
-        # Ejecución del motor
+        # 2. Obtener Info del BIN
+        bin_info = BinLookup.get_info(cc[:6])
+        
+        # 3. Ejecutar Gate de Élite
         result = ChaosGate.check_chaos(cc, mm, yy, cvv)
         
-        # Análisis de Verdad (Capa de Riesgo)
-        risk_info = RiskAnalyzer.get_risk_report(result.get('raw', {}))
+        # 4. Analizar Riesgo Real
+        risk_status = RiskAnalyzer.get_risk_report(result.get('raw', {}))
         
-        response = f"<b>🌀 CHAOS GATE RESULT</b>\n"
-        response += "─" * 20 + "\n"
-        response += f"<b>CARD:</b> <code>{data}</code>\n"
-        response += f"<b>STATUS:</b> {result['status']}\n"
-        response += f"<b>SEGURIDAD:</b> {risk_info}\n"
-        response += f"<b>MSG:</b> <code>{result['msg']}</code>\n"
-        response += "─" * 20 + "\n"
-        response += f"<b>GATE:</b> <code>{result.get('gate', 'Chaos V2')}</code>"
+        # 5. Cálculo de Tiempo y Finalización
+        taken_time = round(time.time() - start_time, 2)
+        
+        # --- DISEÑO REPLICADO AL 1000% ---
+        response = f"<b>み ¡CJKiller_CHk⚡ ↝ Result</b>\n\n"
+        response += f"<b>• CC ↝</b>\n<code>{data}</code>\n"
+        response += f"<b>• Status ↝</b> {result['status']}\n"
+        response += f"<b>• Message ↝</b> {result['msg'].upper()}\n"
+        response += f"<b>• Gateway ↝</b> Chaos Auth\n\n"
+        
+        response += f"<b>• Seg ↝</b> {risk_status}\n"
+        response += f"<b>• Bin ↝</b> ({cc[:6]}) ↝ (3D CHALLENGE ❌)\n"
+        response += f"<b>• Info ↝</b> {bin_info['brand']} - {bin_info['type']} - {bin_info['level']}\n"
+        response += f"<b>• Bank ↝</b> {bin_info['bank']}\n"
+        response += f"<b>• Country ↝</b> {bin_info['country']} {bin_info['flag']}\n\n"
+        
+        response += f"<b>• T/T ↝</b> <code>{taken_time}' Sec</code>  <b>Retries ↝</b> <code>0</code>\n"
+        response += f"<b>• Req ↝</b> @{message.from_user.username} <b>‹ FREE</b>\n"
+        response += f"<b>• DevBy ↝</b> @TuUsuarioAdmin"
 
-        bot.edit_message_text(response, message.chat.id, msg_wait.message_id, parse_mode="HTML")
+        # URL de tu Banner (Asegúrate de poner un link real aquí)
+        banner_url = "https://i.imgur.com/tu_banner_aqui.jpg" 
+
+        # Borramos el mensaje de carga y enviamos el resultado con foto
+        bot.delete_message(message.chat.id, msg_wait.message_id)
+        bot.send_photo(message.chat.id, banner_url, caption=response, parse_mode="HTML")
 
     except Exception as e:
-        bot.reply_to(message, f"🚨 <b>FALLO TÉCNICO:</b> <code>{str(e)}</code>", parse_mode="HTML")
-
+        bot.reply_to(message, f"🚨 <b>FALLO:</b> <code>{str(e)}</code>", parse_mode="HTML")
 # =================================================================
 # PROJECT: CJKILLER OMNIPOTENT
 # MODULE: risk_analyzer.py (CAPA DE INTELIGENCIA)

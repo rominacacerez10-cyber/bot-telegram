@@ -96,25 +96,23 @@ def handle_chaos(message):
     try:
         data = message.text.split()[1]
         cc, mm, yy, cvv = data.split('|')
+        msg_wait = bot.reply_to(message, "🌀 <code>EJECUTANDO CHAOS PROTOCOL...</code>", parse_mode="HTML")
         
-        msg_wait = bot.reply_to(message, "🌀 <code>INICIANDO CHAOS AUTH PROTOCOL...</code>", parse_mode="HTML")
-        
-        # Ejecutamos el motor de caos
-        from checker_engine import ChaosGate
+        # Llamamos al nuevo motor ChaosGate
         result = ChaosGate.check_chaos(cc, mm, yy, cvv)
         
-        # Formateo de respuesta extrema
+        # Analizamos el riesgo usando la respuesta cruda
+        risk_info = RiskAnalyzer.get_risk_report(result.get('raw', {}))
+        
         response = f"<b>🌀 CHAOS GATE RESULT</b>\n"
         response += "─" * 20 + "\n"
         response += f"<b>CARD:</b> <code>{data}</code>\n"
         response += f"<b>STATUS:</b> {result['status']}\n"
-        response += f"<b>GATE:</b> <code>{result['gate']}</code>\n"
+        response += f"<b>SEGURIDAD:</b> {risk_info}\n" # <--- AQUÍ ESTÁ LA CAPA DE VERDAD
         response += f"<b>MSG:</b> <code>{result['msg']}</code>\n"
         response += "─" * 20 + "\n"
-        response += f"<b>HUNTED PK:</b> <code>Active</code>"
-
+        
         bot.edit_message_text(response, message.chat.id, msg_wait.message_id, parse_mode="HTML")
-
     except:
         bot.reply_to(message, "⚠️ <b>USO:</b> <code>/chaos CC|MM|YY|CVV</code>", parse_mode="HTML")
 

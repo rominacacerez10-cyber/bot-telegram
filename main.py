@@ -54,8 +54,9 @@ from network_engine import NetMonitor
 from codec_engine import CodecEngine
 from binary_engine import BinaryEngine
 from broadcast_engine import BroadcastManager
-from checker_engine import CCChecker
 from proxy_manager import ProxyManager
+from health_engine import GateHealth
+from checker_engine import CCChecker
 
 # [DEF 1] INICIALIZACIÓN DE POTENCIA (5000 THREADS)
 # Esto permite que el bot procese ataques y consultas masivas sin lag.
@@ -71,6 +72,31 @@ def check_access(message):
         bot.reply_to(message, f"<b>🛡️ FIREWALL: {reason}</b>", parse_mode="HTML")
         return False
     return True
+
+# -----------------------------------------------------------------
+# [COMMAND] /STATUS - MONITOR DE SALUD DEL SISTEMA
+# -----------------------------------------------------------------
+@bot.message_handler(commands=['status', 'info'])
+def handle_status(message):
+    if not check_access(message): return
+    
+    msg_wait = bot.reply_to(message, "📡 <code>CONSULTANDO ESTADO DE LAS PASARELAS...</code>", parse_mode="HTML")
+    
+    # Obtenemos la PK actual del checker
+    current_pk = getattr(CCChecker, 'current_pk', "No cargada")
+    
+    # Verificamos salud
+    gate_status = GateHealth.check_status(current_pk) if current_pk != "No cargada" else "OFFLINE"
+    
+    results = {
+        "BOT_SYSTEM": "ONLINE 🛰️",
+        "GATEWAY": "Stripe Auth V1",
+        "GATE_STATUS": gate_status,
+        "CURRENT_PK": f"<code>{current_pk[:10]}...</code>" if current_pk else "None"
+    }
+    
+    output = Visuals.format_table("SYSTEM HEALTH", results)
+    bot.edit_message_text(output, message.chat.id, msg_wait.message_id, parse_mode="HTML")
 
 # -----------------------------------------------------------------
 # [VIP] /CHK - CHECKER DE TARJETAS (GATEWAY V1)

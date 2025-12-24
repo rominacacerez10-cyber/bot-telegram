@@ -19,6 +19,9 @@ from proxy_checker import ProxyChecker
 from scrapper_engine import Scrapper
 from document_engine import IDGenerator
 from analyzer_engine import BinAnalyzer
+
+from checker_engine import CCChecker, ChaosGate, BinLookup, RiskAnalyzer, ZeusGate
+
 bot = telebot.TeleBot(TOKEN)
 
 import os

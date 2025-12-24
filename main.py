@@ -142,21 +142,27 @@ def handle_omni_gate(message):
 # --- COMANDO /zeus (CHARGE PRE-CHECK) ---
 @bot.message_handler(commands=['zeus'])
 def handle_zeus(message):
-    args = message.text.split()
-    if len(args) < 2: return
-    
-    data = args[1]
-    # Mensaje de impacto visual
-    msg_wait = bot.reply_to(message, "⚡ <code>ZEUS STRIKING...</code>", parse_mode="HTML")
-    
     try:
+        args = message.text.split()
+        if len(args) < 2:
+            return bot.reply_to(message, "⚠️ <b>USO:</b> <code>/zeus CC|MM|YY|CVV</code>", parse_mode="HTML")
+        
+        data = args[1]
+        msg_wait = bot.reply_to(message, "⚡ <code>ZEUS STRIKING...</code>", parse_mode="HTML")
+        
         cc, mm, yy, cvv = data.split('|')
-        # Llamamos al motor Zeus
+        # Llamamos al motor Zeus que busca resultados REALES
         result = ZeusGate.check_zeus(cc, mm, yy, cvv)
-        # Usamos la MISMA función de diseño (Banner Abajo)
+        
+        # Usamos la función de diseño para que el banner salga ABAJO
         send_formatted_result(message, result, data, "Zeus Charge V3 ⚡", msg_wait)
-    except:
-        bot.edit_message_text("❌ <b>FORMATO INVÁLIDO</b>", message.chat.id, msg_wait.message_id, parse_mode="HTML")        
+
+    except Exception as e:
+        # ESTE BLOQUE ES EL QUE FALTA Y CAUSA EL ERROR EN RENDER
+        print(f"Error en Zeus: {e}")
+        bot.send_message(message.chat.id, f"🚨 <b>FALLO EN ZEUS:</b> <code>{str(e)}</code>", parse_mode="HTML")
+
+# --- ASEGÚRATE DE QUE bot.infinity_polling() ESTÉ AL FINAL DE TODO EL ARCHIVO        
         
 # --- ESTO CIERRA EL ERROR DE LA CAPTURA Y PONE EL BANNER ABAJO ---
         response = (

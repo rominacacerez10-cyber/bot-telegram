@@ -151,20 +151,18 @@ def handle_zeus(message):
         msg_wait = bot.reply_to(message, "⚡ <code>ZEUS STRIKING...</code>", parse_mode="HTML")
         
         cc, mm, yy, cvv = data.split('|')
-        # Llamamos al motor Zeus que busca resultados REALES
+        # Buscamos LIVES reales con el motor Zeus
         result = ZeusGate.check_zeus(cc, mm, yy, cvv)
         
-        # Usamos la función de diseño para que el banner salga ABAJO
+        # Esta función ya tiene el diseño del banner abajo, no necesitas escribirlo de nuevo aquí
         send_formatted_result(message, result, data, "Zeus Charge V3 ⚡", msg_wait)
 
     except Exception as e:
-        # ESTE BLOQUE ES EL QUE FALTA Y CAUSA EL ERROR EN RENDER
         print(f"Error en Zeus: {e}")
         bot.send_message(message.chat.id, f"🚨 <b>FALLO EN ZEUS:</b> <code>{str(e)}</code>", parse_mode="HTML")
 
-# --- ASEGÚRATE DE QUE bot.infinity_polling() ESTÉ AL FINAL DE TODO EL ARCHIVO        
         
-# --- ESTO CIERRA EL ERROR DE LA CAPTURA Y PONE EL BANNER ABAJO ---
+        # --- ESTO CIERRA EL ERROR DE LA CAPTURA Y PONE EL BANNER ABAJO ---
         response = (
             f"<b>み ¡CJKiller_CHk⚡ ↝ Result</b>\n\n"
             f"<b>• CC ↝</b> <code>{data}</code>\n"

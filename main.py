@@ -21,6 +21,23 @@ from document_engine import IDGenerator
 from analyzer_engine import BinAnalyzer
 bot = telebot.TeleBot(TOKEN)
 
+import os
+from flask import Flask
+from threading import Thread
+
+# Esto engaña a Render para que crea que es una web
+app = Flask('')
+@app.route('/')
+def home(): return "Bot CJKiller is Online"
+
+def run():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
+
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
+
 # --- CAPA DE SEGURIDAD (EL ESCUDO) ---
 def check_access(message):
     # Revisa baneos y spam

@@ -94,27 +94,37 @@ def handle_chaos(message):
     if not check_access(message): return
     
     try:
-        data = message.text.split()[1]
+        # Separamos el comando del texto
+        args = message.text.split()
+        if len(args) < 2:
+            raise ValueError("No card provided")
+            
+        data = args[1] # Esto toma el CC|MM|YY|CVV
         cc, mm, yy, cvv = data.split('|')
+        
         msg_wait = bot.reply_to(message, "🌀 <code>EJECUTANDO CHAOS PROTOCOL...</code>", parse_mode="HTML")
         
-        # Llamamos al nuevo motor ChaosGate
+        # Llamamos al motor ChaosGate
         result = ChaosGate.check_chaos(cc, mm, yy, cvv)
         
-        # Analizamos el riesgo usando la respuesta cruda
+        # Obtenemos el reporte de seguridad del RiskAnalyzer que pusimos en checker_engine
         risk_info = RiskAnalyzer.get_risk_report(result.get('raw', {}))
         
+        # Formateo de respuesta mejorado
         response = f"<b>🌀 CHAOS GATE RESULT</b>\n"
         response += "─" * 20 + "\n"
         response += f"<b>CARD:</b> <code>{data}</code>\n"
         response += f"<b>STATUS:</b> {result['status']}\n"
-        response += f"<b>SEGURIDAD:</b> {risk_info}\n" # <--- AQUÍ ESTÁ LA CAPA DE VERDAD
+        response += f"<b>SEGURIDAD:</b> {risk_info}\n" 
         response += f"<b>MSG:</b> <code>{result['msg']}</code>\n"
         response += "─" * 20 + "\n"
-        
+        response += f"<b>GATE:</b> <code>{result['gate']}</code>"
+
         bot.edit_message_text(response, message.chat.id, msg_wait.message_id, parse_mode="HTML")
-    except:
-        bot.reply_to(message, "⚠️ <b>USO:</b> <code>/chaos CC|MM|YY|CVV</code>", parse_mode="HTML")
+
+    except Exception as e:
+        # Si algo falla, te dirá exactamente qué fue en lugar de solo el mensaje de USO
+        bot.reply_to(message, f"⚠️ <b>ERROR:</b> <code>{str(e)}</code>\n<b>USO:</b> <code>/chaos CC|MM|YY|CVV</code>", parse_mode="HTML")
 
 # =================================================================
 # PROJECT: CJKILLER OMNIPOTENT

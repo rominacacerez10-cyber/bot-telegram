@@ -181,24 +181,22 @@ def handle_omni_gate(message):
         bot.send_message(message.chat.id, f"🚨 <b>FALLO EN CHAOS:</b> <code>{str(e)}</code>", parse_mode="HTML")
 
 # --- AHORA SÍ, AQUÍ EMPIEZA ZEUS SIN ERRORES ---
-@bot.message_handler(commands=['zeus'])
-def handle_zeus(message):
+def send_formatted_result(message, result, data, gate_name, msg_wait):
+    # Diseño simple pero efectivo para el resultado
+    response = (
+        f"<b>み ¡CJKiller_CHk⚡ ↝ Result</b>\n\n"
+        f"<b>• CC ↝</b> <code>{data}</code>\n"
+        f"<b>• Status ↝</b> {result.get('status', 'ERROR')}\n"
+        f"<b>• Message ↝</b> {result.get('msg', 'N/A').upper()}\n"
+        f"<b>• Gateway ↝</b> {gate_name}\n\n"
+        f"<b>• Req ↝</b> @{message.from_user.username}"
+    )
+    
     try:
-        args = message.text.split()
-        if len(args) < 2: return
-        
-        data = args[1]
-        msg_wait = bot.reply_to(message, "⚡ <code>ZEUS STRIKING...</code>", parse_mode="HTML")
-        
-        cc, mm, yy, cvv = data.split('|')
-        # Buscamos tarjetas 'Chargeable' con poder real
-        result = ZeusGate.check_zeus(cc, mm, yy, cvv)
-        
-        # El banner sale abajo automáticamente gracias a la función de diseño
-        send_formatted_result(message, result, data, "Zeus Charge V3 ⚡", msg_wait)
-        
-    except Exception as e:
-        bot.send_message(message.chat.id, f"🚨 <b>FALLO EN ZEUS:</b> <code>{str(e)}</code>", parse_mode="HTML")
+        bot.delete_message(message.chat.id, msg_wait.message_id)
+        bot.send_message(message.chat.id, response, parse_mode="HTML")
+    except:
+        bot.send_message(message.chat.id, response, parse_mode="HTML")
 
                             
 bot.infinity_polling()

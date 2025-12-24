@@ -161,41 +161,7 @@ def handle_zeus(message):
         print(f"Error en Zeus: {e}")
         bot.send_message(message.chat.id, f"🚨 <b>FALLO EN ZEUS:</b> <code>{str(e)}</code>", parse_mode="HTML")
 
-        
-        # --- ESTO CIERRA EL ERROR DE LA CAPTURA Y PONE EL BANNER ABAJO ---
-        response = (
-            f"<b>み ¡CJKiller_CHk⚡ ↝ Result</b>\n\n"
-            f"<b>• CC ↝</b> <code>{data}</code>\n"
-            f"<b>• Status ↝</b> {result['status']}\n"
-            f"<b>• Message ↝</b> {result['msg'].upper()}\n"
-            f"<b>• Gateway ↝</b> Chaos Auth V2\n\n"
-            f"<b>• Seg ↝</b> {risk_status}\n"
-            f"<b>• Bin ↝</b> {bin_info['brand']} - {bin_info['level']}\n"
-            f"<b>• Bank ↝</b> {bin_info['bank']}\n"
-            f"<b>• Country ↝</b> {bin_info['country']} {bin_info['flag']}\n\n"
-            f"<b>• T/T ↝</b> <code>{taken_time}' Sec</code>\n"
-            f"<b>• Req ↝</b> @{message.from_user.username}\n"
-            f"<b>• DevBy ↝</b> @TuUsuarioAdmin"
-        )
-
-        banner_url = "https://i.imgur.com/8mSgQW9.png"
-        
-        # Primero borramos el mensaje de espera
-        bot.delete_message(message.chat.id, msg_wait.message_id)
-        
-        # 1. ESTA ES LA CLAVE: Enviamos la foto con el texto como CAPTION
-        # Esto pone el banner abajo y el texto arriba/lado como tu muestra.
-        bot.send_photo(
-            message.chat.id, 
-            banner_url, 
-            caption=response, 
-            parse_mode="HTML"
-        )
-
-    except Exception as e:
-        # Esto soluciona el error de la captura de la 1:50 AM
-        print(f"Error en gate: {e}")
-        bot.send_message(message.chat.id, f"🚨 <b>ERROR:</b> <code>{str(e)}</code>", parse_mode="HTML")
+                            
 bot.infinity_polling()
 # =================================================================
 # PROJECT: CJKILLER OMNIPOTENT

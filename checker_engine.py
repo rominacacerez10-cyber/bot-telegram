@@ -88,9 +88,8 @@ class ChaosGate:
 class ZeusGate:
     
     @staticmethod
-    def check_zeus(cc, mm, yy, cvv):
-        # TU LLAVE MAESTRA QUE SACASTE DE LA CAPTURA
-        sk = "sk_test_51Shy26APmS7lPWA9zM8mBv7K8pA8lS6j7k4f6R8zABC123" 
+    def check_zeus(cc, mm, yy, cvv):  
+        sk = "sk_test_51Shy26APuGnFVpIFWGs3l4ZnoWSuNTK5Jle8FtO4N5e4J5GGFxPEjrGpUPkVsZkjFAhlSIAES22bSnvCTgYM56eG00FGF2Bxcx" 
         
         try:
             # 1. Crear el Token para la transacción

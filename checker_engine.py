@@ -93,8 +93,7 @@ class ZeusGate:
     """
     @staticmethod
     def check_zeus(cc, mm, yy, cvv):
-        # Llave directa para saltar errores de Render temporalmente
-        sk = "rk_test_51Shy26APuGnFVpIF0dFGeX0wSWICM14VBgDkUcbFL6mz1nsHD1KykeYmF72Rk18yba5kjzwOIz6SyuCi1niU1eVC00rirH1GPJ"
+        sk = os.getenv("STRIPE_SK")
         
         try:
             # --- FASE 1: TOKENIZACIÓN ---

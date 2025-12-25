@@ -85,39 +85,48 @@ class ChaosGate:
         except:
             return {"status": "ERROR ⚠️", "msg": "Gate Timeout", "raw": {}}
 
-import os
 import requests
 
 class ZeusGate:
-    """GATEWAY ZEUS OMNIPOTENTE - SEGURIDAD NIVEL ADMIN"""
+    """
+    ⚡ ZEUS GATEWAY - OMNIPOTENTE V3 (ESTÉTICA PREMIUM) ⚡
+    """
     @staticmethod
     def check_zeus(cc, mm, yy, cvv):
-        # Extrae la Restricted Key de forma segura desde Render
-        sk = os.getenv("rk_test_51Shy26APuGnFVpIF0dFGeX0wSWICM14VBgDkUcbFL6mz1nsHD1KykeYmF72Rk18yba5kjzwOIz6SyuCi1niU1eVC00rirH1GPJ")
+        # Llave directa para saltar errores de Render temporalmente
+        sk = "rk_test_51Shy26APuGnFVpIF0dFGeX0wSWICM14VBgDkUcbFL6mz1nsHD1KykeYmF72Rk18yba5kjzwOIz6SyuCi1niU1eVC00rirH1GPJ"
         
         try:
-            # 1. GENERAR TOKEN SEGURO
-            r_token = requests.post(
+            # --- FASE 1: TOKENIZACIÓN ---
+            r_tok = requests.post(
                 'https://api.stripe.com/v1/tokens',
-                data={'card[number]': cc, 'card[cvc]': cvv, 'card[exp_month]': mm, 'card[exp_year]': yy},
+                data={'card[number]':cc, 'card[cvc]':cvv, 'card[exp_month]':mm, 'card[exp_year]':yy},
                 auth=(sk, ''), timeout=15
             )
-            res_tok = r_token.json()
+            res_tok = r_tok.json()
+            
+            if "error" in res_tok:
+                # Si Stripe dice que la API es inválida aquí, es que la llave rk_test fue desactivada
+                return {"status": "DEAD ❌", "msg": f"Stripe Auth: {res_tok['error'].get('message')}"}
+
             tok_id = res_tok.get('id')
 
-            if not tok_id:
-                # Si hay error aquí, es por permisos en Stripe
-                msg = res_tok.get('error', {}).get('message', 'Key Error')
-                return {"status": "DEAD ❌", "msg": f"Stripe: {msg}"}
-
-            # 2. REALIZAR CARGO DE $1.00 USD
-            r_charge = requests.post(
+            # --- FASE 2: CARGO SEGURO ---
+            r_ch = requests.post(
                 'https://api.stripe.com/v1/charges',
-                data={'amount': 100, 'currency': 'usd', 'source': tok_id, 'description': 'Zeus Omnipotent Check'},
+                data={'amount': 100, 'currency': 'usd', 'source': tok_id},
                 auth=(sk, ''), timeout=15
             )
-            res_ch = r_charge.json()
+            res_ch = r_ch.json()
 
+            if res_ch.get('paid'):
+                return {"status": "LIVE ✅ (Charged $1)", "msg": "Success"}
+            else:
+                err = res_ch.get('error', {}).get('message', 'Declined')
+                return {"status": "DEAD ❌", "msg": err}
+
+        except Exception as e:
+            return {"status": "ERROR ⚠️", "msg": f"System: {str(e)}"}
             # 3. FILTRADO DE RESULTADOS REALES
             if res_ch.get('paid'):
                 return {"status": "LIVE ✅ (Charged $1)", "msg": "Transaction Success"}

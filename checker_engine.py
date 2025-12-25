@@ -89,7 +89,7 @@ import requests
 
 class ZeusGate:
     """
-    ⚡ ZEUS GATEWAY - OMNIPOTENTE V3 (ESTÉTICA PREMIUM) ⚡
+    ⚡ ZEUS GATEWAY - OMNIPOTENTE V4 (ESTÉTICA PREMIUM) ⚡
     """
     @staticmethod
     def check_zeus(cc, mm, yy, cvv):

@@ -10,8 +10,8 @@ class PoseidonGate:
     @staticmethod
     def check_poseidon(cc, mm, yy, cvv):
         # Credenciales de tu Sandbox Authorize.Net
-        api_login = "TU_API_LOGIN_ID"
-        trans_key = "TU_TRANSACTION_KEY"
+        api_login = "5b82XEmH"
+        trans_key = "4LAgW52R3E6t7vkS"
         
         # Endpoint de Producción/Sandbox
         url = "https://apitest.authorize.net/xml/v1/request.api"

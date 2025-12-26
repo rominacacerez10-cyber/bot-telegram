@@ -1,5 +1,5 @@
 import requests
-os import 
+import os
 
 class HadesGate:
     """

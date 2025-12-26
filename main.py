@@ -116,6 +116,43 @@ def check_access(message):
         return False
     return True
 
+#----------COMANDO HADES PREMIM V4----------------------------- 
+from hades_gate import HadesGate
+
+@bot.message_handler(commands=['hades', 'hds'])
+def hades_command(message):
+    input_data = message.text.split()
+    
+    if len(input_data) < 2:
+        return bot.reply_to(message, "<b>💀 INVOCACIÓN ERRÓNEA. Use: /hades cc|mm|yy|cvv</b>", parse_mode="HTML")
+
+    full_cc = input_data[1]
+    try:
+        cc, mm, yy, cvv = full_cc.split('|')
+    except:
+        return bot.reply_to(message, "<b>💀 ERROR DE FORMATO. Use: cc|mm|yy|cvv</b>", parse_mode="HTML")
+
+    # Mensaje de espera temático
+    msg_wait = bot.reply_to(message, "<b>💀 HADES está juzgando el alma de esta tarjeta...</b>", parse_mode="HTML")
+
+    # Llamada al motor
+    result = HadesGate.check_hades(cc, mm, yy, cvv)
+
+    # Respuesta Final
+    response = (
+        f"<b>み ¡CJkiller_CHk 💀 ~ Result</b>\n"
+        f"<b>• CC ➜</b> <code>{cc}|{mm}|{yy}|{cvv}</code>\n"
+        f"<b>• Status ➜ {result['status']}</b>\n"
+        f"<b>• Message ➜ {result['msg']}</b>\n"
+        f"<b>• Auth Code ➜ {result.get('auth', 'N/A')}</b>\n"
+        f"<b>• Gateway ➜ HADES (NMI) 💀 (Charge {result.get('charge')})</b>\n\n"
+        f"<b>• Bin ➜</b> <code>Checking...</code>\n"
+        f"<b>• Country ➜</b> <code>Checking...</code>\n"
+        f"<b>• Proxy ➜ LIVE ✅</b>"
+    )
+    
+    bot.edit_message_text(response, message.chat.id, msg_wait.message_id, parse_mode="HTML")    
+
 # -----------------------------------------------------------------
 # [VIP] /CHAOS - EL GATEWAY DEFINITIVO
 # -----------------------------------------------------------------

@@ -115,6 +115,20 @@ def check_access(message):
         bot.reply_to(message, f"<b>🛡️ FIREWALL: {reason}</b>", parse_mode="HTML")
         return False
     return True
+#-------------------COMANDO Talkio GATE TERCEROS---------- 
+import time
+
+@bot.message_handler(commands=['talkio', 'tk'])
+def talkio_handler(message):
+    # (Tu lógica de split de CC...)
+    
+    # ⏳ Agregamos una espera de 3 a 5 segundos para que Talkio no sospeche
+    time.sleep(random.randint(3, 5))
+    
+    # Ejecutamos el check
+    result = TalkioGate.check_talkio(cc, mm, yy, cvv)
+    
+    # (Tu lógica de respuesta...)
 
 #----------COMANDO HADES PREMIM V4----------------------------- 
 from hades_gate import HadesGate
